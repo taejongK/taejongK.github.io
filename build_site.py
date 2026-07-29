@@ -82,6 +82,15 @@ def inline(text: str) -> str:
     return out
 
 
+def chips(text: str) -> str:
+    """'LangChain, FastAPI, React(Vite + TypeScript)' → 칩 span 나열.
+
+    괄호 안의 쉼표는 항목 구분자가 아니므로 건너뛴다.
+    """
+    items = [t.strip() for t in re.split(r",\s*(?![^()]*\))", text) if t.strip()]
+    return "".join(f'<span class="chip">{html.escape(t)}</span>' for t in items)
+
+
 def slug(text: str) -> str:
     """헤딩 앵커용 id. 한글은 그대로 두고 공백만 하이픈으로."""
     s = re.sub(r"[^\w가-힣\s-]", "", text).strip()
@@ -318,7 +327,9 @@ def render_skills(sections):
         items = "".join(
             f"<li>{'<strong>' + html.escape(k) + '</strong> · ' if k else ''}"
             f"{inline(v)}</li>" for k, v in g["items"])
-        out += heading(4, html.escape(g["name"])) + f"<ul>{items}</ul>"
+        out += (f'<div class="skill-group">'
+                + heading(4, html.escape(g["name"]))
+                + f'<ul>{items}</ul></div>')
     return out
 
 
@@ -365,7 +376,7 @@ def render_task(task: Bullet, level: int = 5) -> str:
         main += '<h6 class="label">역할</h6><ul>' + "".join(
             f"<li>{inline(r)}</li>" for r in roles) + "</ul>"
     if stack:
-        main += f'<h6 class="label">사용 기술</h6><p class="stack">{html.escape(stack)}</p>'
+        main += f'<h6 class="label">사용 기술</h6><p class="stack">{chips(stack)}</p>'
 
     return (f'<div class="task"><div class="task-aside">{aside}</div>'
             f'<div class="task-main">{main}</div></div>')
@@ -423,7 +434,9 @@ def render_background(sections):
         if not sec:
             continue
         items = "".join(f"<li>{inline(b.text)}</li>" for b in parse_bullets(sec["lines"]))
-        out += heading(4, html.escape(title)) + f"<ul>{items}</ul>"
+        out += (f'<div class="bg-group">'
+                + heading(4, html.escape(title))
+                + f'<ul>{items}</ul></div>')
     return out
 
 
@@ -452,16 +465,14 @@ PAGE = """<!DOCTYPE html>
 <meta property="og:description" content="LLM 기반 AI 서비스를 기획부터 배포까지. 멀티 에이전트 오케스트레이션, RAG 파이프라인, LLMOps.">
 <meta property="og:type" content="profile">
 <meta name="color-scheme" content="light">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#9633;</text></svg>">
+<meta name="theme-color" content="#bbe2fb">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect x='12' y='12' width='76' height='76' rx='16' fill='%23bbe2fb'/><text x='50' y='50' font-size='52' font-family='sans-serif' font-weight='700' fill='%231b6fa8' text-anchor='middle' dominant-baseline='central'>TJ</text></svg>">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <link rel="stylesheet" href="assets/style.css">
 </head>
 <body>
 __CONTENT__
-  <footer class="doc-footer">
-    <p>이 페이지는 <code>resume.md</code> 한 파일에서 생성됩니다.</p>
-  </footer>
 </article>
 __TOC__
 </div>
