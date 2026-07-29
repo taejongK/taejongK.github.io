@@ -42,3 +42,8 @@ _site/
 .jekyll-metadata
 Gemfile.lock
 vendor/
+
+# 로컬 검증용 임시 파일
+_preview*.html
+_probe.html
+_frame.html
