@@ -47,3 +47,6 @@ vendor/
 _preview*.html
 _probe.html
 _frame.html
+
+# 인쇄용 사진 원본 (웹용 파생본 assets/profile.jpg 만 공개)
+imgs/

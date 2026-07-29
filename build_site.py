@@ -14,6 +14,7 @@ resume.md 가 유일한 원본이다. 이 스크립트는 거기서 공개해도
 import html
 import re
 import sys
+from datetime import date
 from pathlib import Path
 
 ROOT = Path(__file__).parent
@@ -32,6 +33,40 @@ TAGLINE = "LLM 기반 AI 서비스를 기획부터 배포까지 만듭니다."
 NAV_LINKS = [
     ("GitHub", "https://github.com/taejongK"),
 ]
+
+# ── 프로필 사진 ───────────────────────────────────────────────────────
+# 원본(인쇄용 고해상도)은 커밋하지 않고, 여기서 웹용 파생본만 만들어 공개한다.
+# 사진을 빼려면 PHOTO_SRC 를 None 으로 두면 된다.
+PHOTO_SRC = ROOT / "imgs" / "my_image.jpg"
+PHOTO_OUT = ROOT / "assets" / "profile.jpg"
+PHOTO_BOX = (440, 587)          # 파생본 픽셀 (화면 표시 220x293 의 2배)
+# 원본에서 잘라낼 영역 비율 (좌, 상, 우, 하).
+# 얼굴 중심(가로 0.507)에 맞춘 3:4 상반신 프레임 — 머리가 세로의 약 43% 를 차지한다.
+PHOTO_CROP = (0.226, 0.10, 0.788, 0.60)
+
+
+def build_photo():
+    """원본에서 웹용 사진을 생성한다. 실패하면 사진 없이 진행한다."""
+    if PHOTO_SRC is None or not PHOTO_SRC.exists():
+        return None
+    if PHOTO_OUT.exists() and PHOTO_OUT.stat().st_mtime >= PHOTO_SRC.stat().st_mtime:
+        return PHOTO_OUT.name
+    try:
+        from PIL import Image
+    except ImportError:
+        print("  경고: Pillow 가 없어 사진을 갱신하지 못했습니다.")
+        return PHOTO_OUT.name if PHOTO_OUT.exists() else None
+
+    with Image.open(PHOTO_SRC) as im:
+        w, h = im.size
+        l, t, r, b = PHOTO_CROP
+        im = im.crop((int(w * l), int(h * t), int(w * r), int(h * b)))
+        im = im.resize(PHOTO_BOX, Image.LANCZOS)
+        PHOTO_OUT.parent.mkdir(exist_ok=True)
+        im.save(PHOTO_OUT, quality=86, optimize=True, progressive=True)
+    print(f"  사진 생성: {PHOTO_OUT.name} "
+          f"({PHOTO_SRC.stat().st_size / 1e6:.1f}MB → {PHOTO_OUT.stat().st_size / 1024:.0f}KB)")
+    return PHOTO_OUT.name
 
 
 # ── 인라인 마크다운 ───────────────────────────────────────────────────
@@ -69,6 +104,34 @@ def period(text: str) -> str:
 def duration(text: str) -> str:
     """'0년 6개월' → '6개월'. docx 양식 표기를 웹에서만 다듬는다."""
     return re.sub(r"^0년\s*", "", text.strip())
+
+
+def fmt_months(n: int) -> str:
+    """14 → '1년 2개월'."""
+    y, m = divmod(max(n, 0), 12)
+    return " ".join(p for p in (f"{y}년" if y else "", f"{m}개월" if m else "") if p) or "1개월 미만"
+
+
+def parse_months(text: str) -> int:
+    """'1년 2개월' → 14. 경력 총합 계산용."""
+    y = re.search(r"(\d+)\s*년", text)
+    m = re.search(r"(\d+)\s*개월", text)
+    return (int(y.group(1)) * 12 if y else 0) + (int(m.group(1)) if m else 0)
+
+
+def resolve_duration(when: str, dur: str) -> str:
+    """재직 중인 회사의 기간은 빌드 시점 기준으로 다시 계산한다.
+
+    resume.md 에 '1년 2개월' 처럼 적혀 있어도 시간이 지나면 틀린 값이 되므로,
+    '~ 현재' / '~ 재직중' 으로 끝나는 기간만 오늘 날짜로 환산한다.
+    재직 개월 수는 입사월과 당월을 모두 포함하는 국내 이력서 관례를 따른다.
+    """
+    m = re.match(r"^(\d{4})\.(\d{1,2})\s*~\s*(?:현재|재직\s*중)$", when.strip())
+    if not m:
+        return duration(dur)
+    today = date.today()
+    months = (today.year - int(m.group(1))) * 12 + (today.month - int(m.group(2))) + 1
+    return fmt_months(months)
 
 
 def trim_address(addr: str) -> str:
@@ -143,7 +206,8 @@ def split_period(title):
     tail = tail.strip("　 ").strip()
     m = re.match(r"^(.*?)\s*\((.*?)\)\s*$", tail)
     when, dur = (m.group(1), m.group(2)) if m else (tail, "")
-    return head.strip(), period(when), duration(dur)
+    when = period(when)
+    return head.strip(), when, resolve_duration(when, dur)
 
 
 # ── 렌더링 ────────────────────────────────────────────────────────────
@@ -162,6 +226,7 @@ def render_header(sections):
         f'<li><a href="{url}" target="_blank" rel="noopener">{html.escape(label)}</a></li>'
         for label, url in NAV_LINKS)
 
+    name = profile.get("성명", "김태종")
     contacts = []
     if profile.get("이메일"):
         contacts.append(("이메일", f'mailto:{profile["이메일"]}', profile["이메일"]))
@@ -184,6 +249,11 @@ def render_header(sections):
         f'<li><span class="k">{html.escape(k)}</span>'
         f'<span class="v">{html.escape(v)}</span></li>' for k, v in meta)
 
+    photo = build_photo()
+    photo_html = (
+        f'<img class="masthead-photo" src="assets/{photo}" alt="{html.escape(name)}"'
+        f' width="{PHOTO_BOX[0] // 2}" height="{PHOTO_BOX[1] // 2}">' if photo else "")
+
     return f"""
 <nav class="navbar">
   <div class="navbar-inner">
@@ -196,11 +266,17 @@ def render_header(sections):
   </div>
 </nav>
 
+<div class="page">
 <article class="doc" id="top">
-  <h1>{html.escape(GREETING)}</h1>
-  <p class="tagline">{html.escape(TAGLINE)}</p>
-  <ul class="profile">{rows}</ul>
-  <button type="button" class="print-btn" onclick="window.print()">PDF로 저장</button>
+  <div class="masthead-row">
+    <div class="masthead-text">
+      <h1>{html.escape(GREETING)}</h1>
+      <p class="tagline">{html.escape(TAGLINE)}</p>
+      <ul class="profile">{rows}</ul>
+      <button type="button" class="print-btn" onclick="window.print()">PDF로 저장</button>
+    </div>
+    {photo_html}
+  </div>
 
   {heading(2, "자기소개")}
   {"".join(f"<p>{inline(p)}</p>" for p in summary)}
@@ -208,15 +284,21 @@ def render_header(sections):
 
 
 def render_tenure(sections):
-    rows = []
+    rows, total = [], 0
     for b in parse_bullets(find(sections, "경력 사항 요약")["lines"]):
         when, _, org = b.text.partition(":")
         m = re.match(r"^(.*?)\s*\((.*?)\)\s*$", when.strip())
-        span, dur = (m.group(1), duration(m.group(2))) if m else (when.strip(), "")
+        span, raw = (m.group(1), m.group(2)) if m else (when.strip(), "")
+        span = period(span)
+        dur = resolve_duration(span, raw)
+        total += parse_months(dur)
         rows.append(f'<li>{inline(org.strip())} '
-                    f'<span class="period">{html.escape(period(span))}'
+                    f'<span class="period">{html.escape(span)}'
                     f'{" · " + html.escape(dur) if dur else ""}</span></li>')
-    return heading(2, "경력 요약") + f'<ul class="tenure">{"".join(rows)}</ul>'
+    badge = (f' <span class="period">총 {html.escape(fmt_months(total))}</span>'
+             if total else "")
+    return (heading(2, "경력 요약" + badge, anchor="경력 요약")
+            + f'<ul class="tenure">{"".join(rows)}</ul>')
 
 
 def render_skills(sections):
@@ -262,27 +344,31 @@ def render_task(task: Bullet, level: int = 5) -> str:
         else:
             roles.append(child.text)
 
-    title = inline(task.text)
+    title_txt = re.sub(r"<[^>]+>", "", inline(task.text))
+    aside = heading(level, inline(task.text), anchor=title_txt).replace(
+        f'<h{level} id=', f'<h{level} class="task-title" id=')
     if when:
-        title += f' <span class="period">{html.escape(when)}</span>'
-    out = heading(level, title, anchor=re.sub(r"<[^>]+>", "", inline(task.text)))
+        aside += f'<p class="task-period">{html.escape(when)}</p>'
 
+    main = ""
     if link:
         label = re.sub(r"^https?://", "", link.strip())
-        out += (f'<p class="task-link"><a href="{html.escape(link.strip())}"'
-                f' target="_blank" rel="noopener">{html.escape(label)}</a></p>')
+        main += (f'<p class="task-link"><a href="{html.escape(link.strip())}"'
+                 f' target="_blank" rel="noopener">{html.escape(label)}</a></p>')
     if outcome_text or outcomes:
-        out += f'<h6 class="label">성과</h6>'
+        main += '<h6 class="label">성과</h6>'
         if outcome_text:
-            out += f"<p>{inline(outcome_text)}</p>"
+            main += f"<p>{inline(outcome_text)}</p>"
         if outcomes:
-            out += "<ul>" + "".join(f"<li>{inline(o)}</li>" for o in outcomes) + "</ul>"
+            main += "<ul>" + "".join(f"<li>{inline(o)}</li>" for o in outcomes) + "</ul>"
     if roles:
-        out += '<h6 class="label">역할</h6><ul>' + "".join(
+        main += '<h6 class="label">역할</h6><ul>' + "".join(
             f"<li>{inline(r)}</li>" for r in roles) + "</ul>"
     if stack:
-        out += f'<h6 class="label">사용 기술</h6><p class="stack">{html.escape(stack)}</p>'
-    return out
+        main += f'<h6 class="label">사용 기술</h6><p class="stack">{html.escape(stack)}</p>'
+
+    return (f'<div class="task"><div class="task-aside">{aside}</div>'
+            f'<div class="task-main">{main}</div></div>')
 
 
 def render_experience(sections):
@@ -326,7 +412,7 @@ def render_experience(sections):
 
     if side:
         out += heading(2, "그 외 경력")
-        out += "".join(render_task(p, level=3) for p in parse_bullets(side["lines"]))
+        out += "".join(render_task(p) for p in parse_bullets(side["lines"]))
     return out
 
 
@@ -339,6 +425,20 @@ def render_background(sections):
         items = "".join(f"<li>{inline(b.text)}</li>" for b in parse_bullets(sec["lines"]))
         out += heading(4, html.escape(title)) + f"<ul>{items}</ul>"
     return out
+
+
+def build_toc(content):
+    """본문의 h2/h3 를 훑어 우측 목차를 만든다. 레퍼런스와 동일한 2단 위계."""
+    items = []
+    pat = r'<h([23]) id="([^"]+)">(.*?)<a class="hash-link"'
+    for lv, sid, inner in re.findall(pat, content, re.S):
+        text = re.sub(r'<span class="period">.*?</span>', "", inner, flags=re.S)
+        text = re.sub(r"<[^>]+>", "", text).strip()
+        if text:
+            items.append(f'<li class="lv{lv}"><a href="#{sid}">{html.escape(text)}</a></li>')
+    if not items:
+        return ""
+    return f'<nav class="toc" aria-label="\ubaa9\ucc28"><ul>{"".join(items)}</ul></nav>'
 
 
 PAGE = """<!DOCTYPE html>
@@ -363,6 +463,28 @@ __CONTENT__
     <p>이 페이지는 <code>resume.md</code> 한 파일에서 생성됩니다.</p>
   </footer>
 </article>
+__TOC__
+</div>
+<script>
+/* 로드 시점의 #앵커 이동 보정.
+   웹폰트와 사진이 늦게 들어오면서 문서 높이가 바뀌면 브라우저가 처음 시도한
+   프래그먼트 스크롤이 무산된다. 로드가 끝난 뒤 한 번 더 정확히 맞춰준다. */
+(function () {
+  function jump() {
+    var id = decodeURIComponent((location.hash || "").slice(1));
+    if (!id) return;
+    var el = document.getElementById(id);
+    if (!el) return;
+    var root = document.documentElement;
+    var prev = root.style.scrollBehavior;
+    root.style.scrollBehavior = "auto";   // 보정 이동은 애니메이션 없이
+    el.scrollIntoView();
+    root.style.scrollBehavior = prev;
+  }
+  window.addEventListener("load", function () { jump(); setTimeout(jump, 150); });
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(jump);
+})();
+</script>
 </body>
 </html>
 """
@@ -380,7 +502,8 @@ def main():
         + render_experience(sections)
         + render_background(sections)
     )
-    OUT.write_text(PAGE.replace("__CONTENT__", content), encoding="utf-8")
+    page = PAGE.replace("__CONTENT__", content).replace("__TOC__", build_toc(content))
+    OUT.write_text(page, encoding="utf-8")
 
     published = OUT.read_text(encoding="utf-8")
     leaked = [w for w in ("연봉", "이직사유", "만원") if w in published]
