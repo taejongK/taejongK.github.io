@@ -473,6 +473,9 @@ PAGE = """<!DOCTYPE html>
 </head>
 <body>
 __CONTENT__
+  <footer class="doc-footer">
+    <p>최종 수정 __UPDATED__</p>
+  </footer>
 </article>
 __TOC__
 </div>
@@ -513,7 +516,9 @@ def main():
         + render_experience(sections)
         + render_background(sections)
     )
-    page = PAGE.replace("__CONTENT__", content).replace("__TOC__", build_toc(content))
+    page = (PAGE.replace("__CONTENT__", content)
+                .replace("__TOC__", build_toc(content))
+                .replace("__UPDATED__", date.today().strftime("%Y.%m.%d")))
     OUT.write_text(page, encoding="utf-8")
 
     published = OUT.read_text(encoding="utf-8")

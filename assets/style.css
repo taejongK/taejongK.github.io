@@ -403,6 +403,17 @@ code {
 .bg-group { margin-bottom: 1.25rem; }
 .bg-group > h4 { font-weight: 600; margin-bottom: .35rem; }
 
+/* ── 꼬리말 (최종 수정일) ──────────────────────────────────── */
+.doc-footer {
+  margin-top: 5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--rule);
+  font-size: .875rem;
+  color: var(--ink-4);
+}
+
+.doc-footer p { margin: 0; font-size: inherit; color: inherit; }
+
 /* ── 인쇄 버튼 ─────────────────────────────────────────────── */
 .print-btn {
   margin-top: 1.75rem;
@@ -456,6 +467,7 @@ code {
 
   body { font-size: 10pt; line-height: 1.45; }
   .navbar, .toc, .print-btn, .hash-link { display: none !important; }
+  .doc-footer { margin-top: 1.5rem; padding-top: .6rem; font-size: 8.5pt; }
   .page { max-width: none; padding: 0; display: block; }
   .doc h1 { font-size: 21pt; margin-bottom: .5rem; }
   .doc h2 { font-size: 14pt; margin: 1.3rem 0 .6rem; padding-top: .3rem; }
