@@ -333,10 +333,20 @@ def render_skills(sections):
     return out
 
 
+# 프로젝트 본문에 소제목으로 렌더링되는 라벨. resume.md 에 적힌 순서·표기 그대로 나간다.
+# '문제 / 방법 / 결과' 가 현재 표준. 나머지는 구 문서 호환용이다.
+CONTENT_LABELS = ("문제", "방법", "결과", "해결", "성과", "역할",
+                  "Problem", "Methods", "Result")
+
+# 기술 스택 라벨. resume.md 는 '사용 기술' 을 쓰고, 구 표기도 받는다.
+STACK_LABELS = ("사용 기술", "기술", "Skills")
+
+
 def render_task(task: Bullet, level: int = 5) -> str:
     """수행업무 / 사이드 프로젝트 1건. 레퍼런스의 라벨 소제목 구조를 따른다."""
-    when = link = outcome_text = stack = ""
-    outcomes, roles = [], []
+    when = link = stack = ""
+    stack_label = "사용 기술"
+    blocks: list[tuple[str, str, list[str]]] = []   # (라벨, 본문, 하위 항목)
 
     for child in task.children:
         k, v = split_kv(child.text)
@@ -344,16 +354,15 @@ def render_task(task: Bullet, level: int = 5) -> str:
             when = period(v)
         elif k == "링크":
             link = v
-        elif k == "성과":
-            if v:
-                outcome_text = v
-            outcomes += [c.text for c in child.children]
-        elif k == "역할":
-            roles += ([v] if v else []) + [c.text for c in child.children]
-        elif k == "기술":
-            stack = v
+        elif k in STACK_LABELS:
+            stack, stack_label = v, k
+        elif k in CONTENT_LABELS:
+            blocks.append((k, v, [c.text for c in child.children]))
+        elif blocks:
+            # 라벨 없는 줄은 직전 블록에 붙인다.
+            blocks[-1][2].append(child.text)
         else:
-            roles.append(child.text)
+            blocks.append(("", child.text, []))
 
     title_txt = re.sub(r"<[^>]+>", "", inline(task.text))
     aside = heading(level, inline(task.text), anchor=title_txt).replace(
@@ -366,17 +375,16 @@ def render_task(task: Bullet, level: int = 5) -> str:
         label = re.sub(r"^https?://", "", link.strip())
         main += (f'<p class="task-link"><a href="{html.escape(link.strip())}"'
                  f' target="_blank" rel="noopener">{html.escape(label)}</a></p>')
-    if outcome_text or outcomes:
-        main += '<h6 class="label">성과</h6>'
-        if outcome_text:
-            main += f"<p>{inline(outcome_text)}</p>"
-        if outcomes:
-            main += "<ul>" + "".join(f"<li>{inline(o)}</li>" for o in outcomes) + "</ul>"
-    if roles:
-        main += '<h6 class="label">역할</h6><ul>' + "".join(
-            f"<li>{inline(r)}</li>" for r in roles) + "</ul>"
+    for label, text, subs in blocks:
+        if label:
+            main += f'<h6 class="label">{html.escape(label)}</h6>'
+        if text:
+            main += f"<p>{inline(text)}</p>"
+        if subs:
+            main += "<ul>" + "".join(f"<li>{inline(s)}</li>" for s in subs) + "</ul>"
     if stack:
-        main += f'<h6 class="label">사용 기술</h6><p class="stack">{chips(stack)}</p>'
+        main += (f'<h6 class="label">{html.escape(stack_label)}</h6>'
+                 f'<p class="stack">{chips(stack)}</p>')
 
     return (f'<div class="task"><div class="task-aside">{aside}</div>'
             f'<div class="task-main">{main}</div></div>')
@@ -519,12 +527,13 @@ def main():
     page = (PAGE.replace("__CONTENT__", content)
                 .replace("__TOC__", build_toc(content))
                 .replace("__UPDATED__", date.today().strftime("%Y.%m.%d")))
-    OUT.write_text(page, encoding="utf-8")
-
-    published = OUT.read_text(encoding="utf-8")
-    leaked = [w for w in ("연봉", "이직사유", "만원") if w in published]
+    # 검사를 먼저 한다. 쓰고 나서 검사하면 차단에 실패해도 민감 정보가 디스크에 남는다.
+    leaked = [w for w in ("연봉", "이직사유", "만원") if w in page]
     if leaked:
-        sys.exit(f"중단: 공개판에 민감 항목이 남았습니다 → {leaked}")
+        sys.exit(f"중단: 공개판에 민감 항목이 남았습니다 → {leaked} (index.html 미변경)")
+
+    OUT.write_text(page, encoding="utf-8")
+    published = OUT.read_text(encoding="utf-8")
 
     print(f"생성 완료: {OUT.relative_to(ROOT)} ({len(published):,} bytes)")
     print(f"제외된 항목: {', '.join(sorted(REDACT_FIELDS))}")

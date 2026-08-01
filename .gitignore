@@ -19,8 +19,10 @@ projects/
 
 # ── 개인정보 포함 원본 (비공개) ────────────────────────────
 # resume.md 는 연봉·이직사유가 들어간 제출용 전체판.
-# 공개되는 것은 여기서 생성한 index.md 뿐이다.
+# resume_submit.md 는 거기서 작업 메모만 걷어낸 제출본 — 개인정보는 그대로다.
+# 공개되는 것은 여기서 생성한 index.html 뿐이다.
 resume.md
+resume_submit.md
 references/
 my_profile/
 
