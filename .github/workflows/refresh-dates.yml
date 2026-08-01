@@ -1,0 +1,45 @@
+name: 재직기간 자동 갱신
+
+# 재직 중인 회사의 기간과 경력 총합은 시간이 지나면 값이 늘어난다.
+# 원본(resume.md)은 개인정보 때문에 저장소에 없으므로 build_site.py 를 돌릴 수 없고,
+# index.html 안의 입사 연월로부터 숫자만 다시 계산한다.
+on:
+  schedule:
+    # 매월 1일 09:00 KST (00:00 UTC) — 한국 기준으로 달이 바뀐 뒤에 실행된다
+    - cron: "0 0 1 * *"
+  workflow_dispatch:        # 필요할 때 수동 실행
+
+permissions:
+  contents: write
+
+concurrency:
+  group: refresh-dates
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    env:
+      TZ: Asia/Seoul
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 날짜 갱신
+        run: python3 refresh_dates.py
+
+      - name: 변경 없으면 종료, 있으면 커밋
+        run: |
+          if git diff --quiet -- index.html; then
+            echo "갱신할 값이 없습니다. 커밋을 생략합니다."
+            exit 0
+          fi
+
+          echo "--- 변경 내용 ---"
+          git diff --unified=0 -- index.html | grep -E '^[+-].*(현재 ·|총 [0-9]+년|최종 수정)' || true
+
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git commit -m "재직기간·최종 수정일 자동 갱신 ($(date +%Y.%m.%d))"
+          git push
