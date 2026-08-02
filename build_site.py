@@ -27,7 +27,7 @@ REDACT_FIELDS = {"연봉", "이직사유"}
 
 # 사이트 카피 (이력서 본문이 아니라 편집 문구이므로 여기서 관리한다)
 GREETING = "안녕하세요. 김태종입니다."
-TAGLINE = "LLM 기반 AI 서비스를 기획부터 배포까지 만듭니다."
+TAGLINE = "\"좋아진 것 같다\"로는 배포하지 않습니다."
 
 # 상단 네비 우측 링크. (라벨, URL) — 블로그·LinkedIn 이 생기면 여기 추가.
 NAV_LINKS = [
@@ -468,9 +468,9 @@ PAGE = """<!DOCTYPE html>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>김태종 — AI Engineer</title>
-<meta name="description" content="LLM 기반 AI 서비스를 기획부터 배포까지. 멀티 에이전트 오케스트레이션, RAG 파이프라인, LLMOps.">
+<meta name="description" content="잴 수 없다고 여겨지는 것에 기준을 세우는 AI 엔지니어. LLM 평가 체계, 에이전트 아키텍처, LLMOps.">
 <meta property="og:title" content="김태종 — AI Engineer">
-<meta property="og:description" content="LLM 기반 AI 서비스를 기획부터 배포까지. 멀티 에이전트 오케스트레이션, RAG 파이프라인, LLMOps.">
+<meta property="og:description" content="잴 수 없다고 여겨지는 것에 기준을 세우는 AI 엔지니어. LLM 평가 체계, 에이전트 아키텍처, LLMOps.">
 <meta property="og:type" content="profile">
 <meta name="color-scheme" content="light">
 <meta name="theme-color" content="#bbe2fb">
