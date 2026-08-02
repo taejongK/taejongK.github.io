@@ -468,9 +468,9 @@ PAGE = """<!DOCTYPE html>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>김태종 — AI Engineer</title>
-<meta name="description" content="원인을 규명하고 잴 기준을 만들어 개선하는 AI 엔지니어. LLM 평가 체계, 에이전트 아키텍처, LLMOps.">
+<meta name="description" content="정량화하기 어려운 것에 기준을 세우는 AI 엔지니어. LLM 평가 체계, 에이전트 아키텍처, LLMOps.">
 <meta property="og:title" content="김태종 — AI Engineer">
-<meta property="og:description" content="원인을 규명하고 잴 기준을 만들어 개선하는 AI 엔지니어. LLM 평가 체계, 에이전트 아키텍처, LLMOps.">
+<meta property="og:description" content="정량화하기 어려운 것에 기준을 세우는 AI 엔지니어. LLM 평가 체계, 에이전트 아키텍처, LLMOps.">
 <meta property="og:type" content="profile">
 <meta name="color-scheme" content="light">
 <meta name="theme-color" content="#bbe2fb">
