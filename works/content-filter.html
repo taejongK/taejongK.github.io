@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>자체 서빙 모델 콘텐츠 필터 — 김태종</title>
+<meta name="description" content="자기회귀 모델의 &quot;생성 관성&quot;을 역이용해, 응답 전에 분류를 강제하는 2-Step 기법으로 F1 18.1% → 87.0%.">
+<meta property="og:title" content="자체 서빙 모델 콘텐츠 필터 — 김태종">
+<meta property="og:description" content="자기회귀 모델의 &quot;생성 관성&quot;을 역이용해, 응답 전에 분류를 강제하는 2-Step 기법으로 F1 18.1% → 87.0%.">
+<meta property="og:type" content="article">
+<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#bbe2fb">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect x='12' y='12' width='76' height='76' rx='16' fill='%23bbe2fb'/><text x='50' y='50' font-size='52' font-family='sans-serif' font-weight='700' fill='%231b6fa8' text-anchor='middle' dominant-baseline='central'>TJ</text></svg>">
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<nav class="navbar">
+  <div class="navbar-inner">
+    <a class="navbar-brand" href="../index.html">@taejongK</a>
+    <ul class="navbar-links">
+      <li><a href="../index.html#업무-경력">경력</a></li>
+      <li><a href="../index.html#그-외-경력">프로젝트</a></li>
+      <li><a href="https://github.com/taejongK" target="_blank" rel="noopener">GitHub</a></li>
+    </ul>
+  </div>
+</nav>
+
+<div class="page">
+<article class="doc doc-detail" id="top">
+  <a class="back-link" href="../index.html#자체-서빙-모델-콘텐츠-필터-개발-cot-기반">← 이력서로 돌아가기</a>
+  <h1>자체 서빙 모델 콘텐츠 필터</h1>
+  <p class="lead">자기회귀 모델의 &quot;생성 관성&quot;을 역이용해, 응답 전에 분류를 강제하는 2-Step 기법으로 F1 18.1% → 87.0%.</p>
+  <ul class="detail-meta"><li><span class="k">기간</span><span class="v">2026.06 (1개월)</span></li><li><span class="k">소속</span><span class="v">(주)버블탭 AI코어팀</span></li><li><span class="k">역할</span><span class="v">단독 기획·설계·개발</span></li></ul>
+  <h6 class="label">사용 기술</h6><p class="stack"><span class="chip">Prompt Engineering</span><span class="chip">Chain-of-Thought</span><span class="chip">vLLM</span><span class="chip">Python</span><span class="chip">Gemini(데이터 검증)</span></p>
+<h2 id="문제">문제<a class="hash-link" href="#문제" aria-label="이 항목으로 바로가기" title="이 항목으로 바로가기">#</a></h2><p>자체 서빙 모델은 상용 API 와 달리 플랫폼 수준의 콘텐츠 필터가 없다. 즉 안전장치를 직접 만들어야 하는데, 가장 먼저 떠오르는 방법이 가장 먼저 실패했다.</p><ul><li>자체 서빙 모델은 플랫폼 수준 콘텐츠 필터가 없어, 미성년자 대상 성적 콘텐츠가 생성될 수 있음</li><li>&quot;생성하지 마시오&quot; 수준의 단순 지시는 거의 무효 — <strong>Baseline F1 18.1%, Recall 10.0%</strong></li><li>법적·윤리적 리스크 대응과 서비스 안정성 확보가 시급함</li></ul><p>Recall 10% 는 걸러야 할 열 건 중 아홉 건이 그대로 나간다는 뜻이다. 필터가 있다고 말할 수 없는 수준이었다.</p><h2 id="접근법-선택">접근법 선택<a class="hash-link" href="#접근법-선택" aria-label="이 항목으로 바로가기" title="이 항목으로 바로가기">#</a></h2><p>세 가지 선택지를 놓고 비교했다.</p><ul><li><strong>Fine-tuning</strong> — 학습 데이터 구축 비용이 크고 실험 한 번의 사이클이 길다</li><li><strong>외부 분류기</strong> — 추가 인프라와 지연이 붙는다</li><li><strong>프롬프트 엔지니어링</strong> — 즉시 배포 가능하고 실험 사이클이 짧다 ← 1차 접근법으로 선택</li></ul><p>리스크 대응이 시급한 상황에서는 &quot;가장 좋은 방법&quot;보다 &quot;가장 빨리 돌려볼 수 있는 방법&quot;이 먼저다. 프롬프트로 어디까지 되는지 상한을 확인하고, 부족하면 그때 다음 수단으로 간다는 순서였다.</p><h2 id="핵심-기법-think-first-flag-next">핵심 기법 — Think First, Flag Next<a class="hash-link" href="#핵심-기법-think-first-flag-next" aria-label="이 항목으로 바로가기" title="이 항목으로 바로가기">#</a></h2><p>자기회귀 모델은 한 번 생성을 시작하면 관성으로 중단하지 못한다. 바꿔 말하면, <strong>생성이 시작되기 전에 판단을 끝내면</strong> 관성이 오히려 안전한 방향으로 작동한다.</p><pre class="diagram">                      ┌─────────────────────────────────┐
+  유저 입력  ────────▶ │  ① Flag 분류                    │
+  + 캐릭터 프로필      │     응답 첫 토큰으로 강제 출력   │
+                      │     MINOR / ADULT / SAFE        │
+                      └────────────┬────────────────────┘
+                                   │
+                      ┌────────────▼────────────────────┐
+                      │  ② Chain-of-Thought             │
+                      │     1. 캐릭터 나이 판정          │
+                      │     2. 프로필·입력의 성적 요소   │
+                      │     3. 최종 판정                 │
+                      └────────────┬────────────────────┘
+                                   │
+                                   ▼
+                              응답 생성 / 차단</pre><p>CoT 의 <strong>추론 순서가 성능을 좌우한다</strong>. 나이를 먼저 판정하고 성적 요소를 나중에 보는 순서를 뒤집었더니 <strong>F1 이 24.3%p 하락</strong>했다. 나이 판정이 먼저 확정돼야 뒤따르는 판단의 기준이 서기 때문이다.</p><figure class="figure figure-empty"><div class="figure-slot"><span class="figure-slot-tag">이미지 자리</span><code>assets/works/content-filter/two-step-output.png</code><span class="figure-slot-hint">Flag 분류 → Chain-of-Thought → 최종 판정으로 이어지는 출력 구조 예시 (합성 입력 · 실서비스 대화 아님)</span></div><figcaption>Flag 분류 → Chain-of-Thought → 최종 판정으로 이어지는 출력 구조 예시 (합성 입력 · 실서비스 대화 아님)</figcaption></figure><h2 id="실험-과정">실험 과정<a class="hash-link" href="#실험-과정" aria-label="이 항목으로 바로가기" title="이 항목으로 바로가기">#</a></h2><p>baseline 부터 v15 까지 <strong>15회 반복 실험</strong>으로 검증했다.</p><ul><li>CoT 도입(v7)이 단일 변경으로는 가장 큰 개선 — <strong>F1 60% → 81%</strong></li><li>CoT 추론 순서 역전 실험으로 순서 설계의 중요성을 실측 확인 (F1 24.3%p 하락)</li></ul><figure class="figure figure-empty"><div class="figure-slot"><span class="figure-slot-tag">이미지 자리</span><code>assets/works/content-filter/f1-progression.png</code><span class="figure-slot-hint">baseline 부터 v15 까지 실험 버전별 F1 · Recall 추이 — CoT 도입 지점(v7)의 계단이 보이도록</span></div><figcaption>baseline 부터 v15 까지 실험 버전별 F1 · Recall 추이 — CoT 도입 지점(v7)의 계단이 보이도록</figcaption></figure><h3 id="평가-데이터셋-직접-구축">평가 데이터셋 직접 구축<a class="hash-link" href="#평가-데이터셋-직접-구축" aria-label="이 항목으로 바로가기" title="이 항목으로 바로가기">#</a></h3><p>측정할 수 없으면 개선할 수 없다. 평가셋부터 만들었다.</p><ul><li>실서비스 데이터 <strong>499,397건</strong>을 3단계 파이프라인으로 필터링해 <strong>300건 테스트셋</strong> 구성 (규칙 기반 → gemma-4-26b → gemini-3.5-flash)</li><li>실험 도중 <strong>데이터셋 자체의 라벨 오류를 발견</strong> — 전수조사로 <strong>42%(126건)를 교정</strong>한 뒤에야 정확한 성능 측정이 가능해졌다</li></ul><p>성능이 오르지 않는다고 생각했던 구간의 상당 부분이 실은 정답이 틀린 것이었다. 모델을 의심하기 전에 평가셋을 의심해야 한다는 걸 이 과정에서 얻었다.</p><figure class="figure figure-empty"><div class="figure-slot"><span class="figure-slot-tag">이미지 자리</span><code>assets/works/content-filter/label-correction.png</code><span class="figure-slot-hint">라벨 전수 교정 전후의 성능 측정 비교 — 같은 모델인데 측정값이 달라진다</span></div><figcaption>라벨 전수 교정 전후의 성능 측정 비교 — 같은 모델인데 측정값이 달라진다</figcaption></figure><h3 id="부작용-검증">부작용 검증<a class="hash-link" href="#부작용-검증" aria-label="이 항목으로 바로가기" title="이 항목으로 바로가기">#</a></h3><p>차단률만 올리는 필터는 서비스를 망친다. 두 방향으로 확인했다.</p><ul><li><strong>출력 품질</strong> — 필터 적용이 응답 품질을 해치지 않는지 루브릭으로 검증</li><li><strong>과잉 차단</strong> — 실서비스에서 필터링된 사례 <strong>123건을 정오 분류</strong> (올바른 차단 87건 / 의문 36건) → 과잉 차단 패턴 3가지와 후속 개선 방향(감지·출력제어 분리, 소형 분류기 하이브리드) 도출</li></ul><h2 id="결과">결과<a class="hash-link" href="#결과" aria-label="이 항목으로 바로가기" title="이 항목으로 바로가기">#</a></h2><ul><li>미성년자 성적 콘텐츠 차단 <strong>F1 18.1% → 87.0%</strong> (Recall 10.0% → 84.7%, Precision 89.4% 유지, Accuracy 54.7% → 87.3%)</li><li>루브릭 점수 3.790 → 3.794 로 <strong>출력 품질 저하가 없음</strong>을 확인하고, 양 서비스 QA 전원의 확인을 받은 뒤 배포</li><li>배포 후 콘텐츠 필터 관련 <strong>문의 접수 0건</strong></li><li>CoT 추가에 따른 응답 지연은 3~5초로, 서비스에서 함께 쓰는 외부 모델(5~10초)보다 빨라 체감 영향 없음</li><li>실험 과정을 논문 형식(<strong>&quot;Think First, Flag Next&quot;</strong>)으로 정리해 사내 공유</li></ul>
+  <footer class="doc-footer">
+    <p>최종 수정 2026.08.06 · 요약은 <a href="../index.html#자체-서빙-모델-콘텐츠-필터-개발-cot-기반">이력서</a>에 있습니다.</p>
+  </footer>
+</article>
+<nav class="toc" aria-label="목차"><ul><li class="lv2"><a href="#문제">문제</a></li><li class="lv2"><a href="#접근법-선택">접근법 선택</a></li><li class="lv2"><a href="#핵심-기법-think-first-flag-next">핵심 기법 — Think First, Flag Next</a></li><li class="lv2"><a href="#실험-과정">실험 과정</a></li><li class="lv3"><a href="#평가-데이터셋-직접-구축">평가 데이터셋 직접 구축</a></li><li class="lv3"><a href="#부작용-검증">부작용 검증</a></li><li class="lv2"><a href="#결과">결과</a></li></ul></nav>
+</div>
+</body>
+</html>

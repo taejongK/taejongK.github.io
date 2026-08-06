@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>프롬프트 관리 툴 (사내 LLMOps) — 김태종</title>
+<meta name="description" content="git 의 형상관리 개념을 프롬프트에 그대로 옮긴 사내 도구. DB화 · 렌더 API · MCP 서버 · diff/merge/cherry-picking 까지.">
+<meta property="og:title" content="프롬프트 관리 툴 (사내 LLMOps) — 김태종">
+<meta property="og:description" content="git 의 형상관리 개념을 프롬프트에 그대로 옮긴 사내 도구. DB화 · 렌더 API · MCP 서버 · diff/merge/cherry-picking 까지.">
+<meta property="og:type" content="article">
+<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#bbe2fb">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect x='12' y='12' width='76' height='76' rx='16' fill='%23bbe2fb'/><text x='50' y='50' font-size='52' font-family='sans-serif' font-weight='700' fill='%231b6fa8' text-anchor='middle' dominant-baseline='central'>TJ</text></svg>">
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<nav class="navbar">
+  <div class="navbar-inner">
+    <a class="navbar-brand" href="../index.html">@taejongK</a>
+    <ul class="navbar-links">
+      <li><a href="../index.html#업무-경력">경력</a></li>
+      <li><a href="../index.html#그-외-경력">프로젝트</a></li>
+      <li><a href="https://github.com/taejongK" target="_blank" rel="noopener">GitHub</a></li>
+    </ul>
+  </div>
+</nav>
+
+<div class="page">
+<article class="doc doc-detail" id="top">
+  <a class="back-link" href="../index.html#프롬프트-관리-툴-개발-사내-llmops">← 이력서로 돌아가기</a>
+  <h1>프롬프트 관리 툴 (사내 LLMOps)</h1>
+  <p class="lead">git 의 형상관리 개념을 프롬프트에 그대로 옮긴 사내 도구. DB화 · 렌더 API · MCP 서버 · diff/merge/cherry-picking 까지.</p>
+  <ul class="detail-meta"><li><span class="k">기간</span><span class="v">2026.07 (1개월)</span></li><li><span class="k">소속</span><span class="v">(주)버블탭 AI코어팀</span></li><li><span class="k">역할</span><span class="v">단독 기획·설계·개발</span></li></ul>
+  <h6 class="label">사용 기술</h6><p class="stack"><span class="chip">FastAPI</span><span class="chip">PostgreSQL</span><span class="chip">SQLAlchemy</span><span class="chip">Alembic</span><span class="chip">MCP</span><span class="chip">Handlebars/Jinja2</span><span class="chip">React(Vite + TypeScript)</span></p>
+<h2 id="문제">문제<a class="hash-link" href="#문제" aria-label="이 항목으로 바로가기" title="이 항목으로 바로가기">#</a></h2><p>프롬프트가 서비스 품질을 결정하는데, 정작 그 프롬프트를 관리하는 방식이 시트였다. 문제는 &quot;정리가 안 돼 있다&quot;가 아니라 <strong>개선 루프 자체가 끊겨 있다</strong>는 것이었다.</p><ul><li>프롬프트 버전 관리가 지나치게 복잡해, 지금 쓰이는 버전이 <strong>어떤 히스토리를 거쳐 배포됐는지 · 어떤 테스트를 통과했는지</strong> 를 아무도 파악할 수 없음</li><li>프롬프트 수정에는 LLM 툴을 많이 쓰는데, 시트에서 복사해 지시하고 결과를 다시 붙여넣어 테스트하는 왕복 작업을 매번 반복해야 함</li><li>그렇게 붙여넣은 LLM 은 변경 히스토리도 테스트 이력도 모르는 상태라 컨텍스트 없이 답할 수밖에 없어 개선 결과의 품질 자체가 떨어짐</li></ul><p>세 번째가 핵심이다. 앞의 둘은 불편이지만, 세 번째는 <strong>도구의 한계가 결과물의 품질을 깎는</strong> 문제다.</p><h2 id="해결-순서">해결 순서<a class="hash-link" href="#해결-순서" aria-label="이 항목으로 바로가기" title="이 항목으로 바로가기">#</a></h2><p>네 단계를 이 순서로 밟았다. 각 단계가 다음 단계의 전제가 된다.</p><pre class="diagram">① DB화              시트 → PostgreSQL
+                    버전 · 배포 상태 · 변경 이력을 한곳에서
+                        │
+                        ▼
+② 외부 연동 API      변수(context)만 받아 렌더링 결과만 반환
+                    LLM 호출 · 과금 · DB 기록 없는 드라이런
+                        │
+                        ▼
+③ 편집용 MCP 서버    Claude Code 에서 직접 조회 · 수정 · 테스트
+                    복붙 왕복 제거 + LLM 이 히스토리를 컨텍스트로 확보
+                        │
+                        ▼
+④ git 형상관리 적용  배포 버전 지정 · 섹션 단위 diff · merge
+                    cherry-picking · branch tree 히스토리 시각화</pre><h2 id="기술-의사결정">기술 의사결정<a class="hash-link" href="#기술-의사결정" aria-label="이 항목으로 바로가기" title="이 항목으로 바로가기">#</a></h2><h3 id="db화-단일-소스-확보가-먼저">DB화 — 단일 소스 확보가 먼저<a class="hash-link" href="#db화-단일-소스-확보가-먼저" aria-label="이 항목으로 바로가기" title="이 항목으로 바로가기">#</a></h3><p>시트에 흩어져 있던 프롬프트를 SQLAlchemy ORM + Alembic + PostgreSQL 저장소로 이관했다. 버전·배포 상태·변경 이력이 한곳에 모여야 그다음의 diff 도 MCP 도 의미가 생긴다.</p><figure class="figure figure-empty"><div class="figure-slot"><span class="figure-slot-tag">이미지 자리</span><code>assets/works/prompt-ops/prompt-list.png</code><span class="figure-slot-hint">프롬프트 목록과 현재 배포 버전을 한눈에 관리하는 화면</span></div><figcaption>프롬프트 목록과 현재 배포 버전을 한눈에 관리하는 화면</figcaption></figure><h3 id="드라이런-렌더-엔드포인트">드라이런 렌더 엔드포인트<a class="hash-link" href="#드라이런-렌더-엔드포인트" aria-label="이 항목으로 바로가기" title="이 항목으로 바로가기">#</a></h3><p>변수(context)만 받아 <strong>LLM 호출 · 과금 · DB 기록 없이 렌더링 결과만</strong> 돌려주는 엔드포인트를 뒀다. 덕분에 어떤 프로그램에서든 같은 프롬프트를 가져다 쓸 수 있고, 렌더 결과 확인에 토큰이 들지 않는다.</p><h3 id="편집용-mcp-서버-복붙-왕복을-없앤-지점">편집용 MCP 서버 — 복붙 왕복을 없앤 지점<a class="hash-link" href="#편집용-mcp-서버-복붙-왕복을-없앤-지점" aria-label="이 항목으로 바로가기" title="이 항목으로 바로가기">#</a></h3><p>Claude Code 에서 프롬프트를 직접 조회·수정·테스트하도록 MCP 서버를 붙였다. 복붙 왕복이 사라진 것보다 중요한 건, <strong>LLM 이 변경 히스토리와 테스트 이력을 컨텍스트로 갖고 작업하게 됐다</strong>는 점이다. 문제 정의의 세 번째 항목이 여기서 풀린다.</p><figure class="figure figure-empty"><div class="figure-slot"><span class="figure-slot-tag">이미지 자리</span><code>assets/works/prompt-ops/mcp-editing.png</code><span class="figure-slot-hint">Claude Code 에서 MCP 서버로 프롬프트를 직접 조회·수정·테스트하는 장면</span></div><figcaption>Claude Code 에서 MCP 서버로 프롬프트를 직접 조회·수정·테스트하는 장면</figcaption></figure><h3 id="git-형상관리-개념을-프롬프트에-적용">git 형상관리 개념을 프롬프트에 적용<a class="hash-link" href="#git-형상관리-개념을-프롬프트에-적용" aria-label="이 항목으로 바로가기" title="이 항목으로 바로가기">#</a></h3><ul><li><strong>배포 버전 지정</strong> — 어느 버전이 지금 프로덕션에 나가 있는지 명시적으로 관리</li><li><strong>섹션 단위 diff</strong> — 외부 의존성 없이 LCS 를 직접 구현해 프롬프트를 섹션 단위로 비교</li><li><strong>merge</strong> — 서로 다른 버전의 변경을 합침</li><li><strong>cherry-picking</strong> — 특정 버전의 개별 섹션만 골라 가져옴</li><li><strong>branch tree 히스토리 시각화</strong> — 버전 계보를 git branch tree 형태로 표시</li></ul><figure class="figure figure-empty"><div class="figure-slot"><span class="figure-slot-tag">이미지 자리</span><code>assets/works/prompt-ops/branch-tree.png</code><span class="figure-slot-hint">프롬프트 버전 계보를 git branch tree 형태로 표시한 히스토리 화면</span></div><figcaption>프롬프트 버전 계보를 git branch tree 형태로 표시한 히스토리 화면</figcaption></figure><figure class="figure figure-empty"><div class="figure-slot"><span class="figure-slot-tag">이미지 자리</span><code>assets/works/prompt-ops/section-diff.png</code><span class="figure-slot-hint">두 버전의 변경을 섹션 단위로 비교하는 diff 화면 — 외부 의존성 없이 LCS 직접 구현</span></div><figcaption>두 버전의 변경을 섹션 단위로 비교하는 diff 화면 — 외부 의존성 없이 LCS 직접 구현</figcaption></figure><h3 id="handlebars-전환과-골든-스냅샷-검증">Handlebars 전환과 골든 스냅샷 검증<a class="hash-link" href="#handlebars-전환과-골든-스냅샷-검증" aria-label="이 항목으로 바로가기" title="이 항목으로 바로가기">#</a></h3><p>프롬프트 저장 표기를 프로덕션과 동일한 Handlebars 로 전환하면서 전처리기를 직접 구현했다. 표기 방식을 바꾸는 작업은 출력이 미묘하게 달라져도 알아채기 어렵다는 게 위험 요소다. <strong>골든 스냅샷 75건을 바이트 단위로 동일 검증</strong>해 표기 변경이 출력에 영향을 주지 않음을 입증한 뒤 적용했다.</p><h3 id="모델-관리-통합-중-발견한-폴백-위험">모델 관리 통합 중 발견한 폴백 위험<a class="hash-link" href="#모델-관리-통합-중-발견한-폴백-위험" aria-label="이 항목으로 바로가기" title="이 항목으로 바로가기">#</a></h3><p>모델 관리도 같은 툴에 통합하면서 vLLM 프로바이더 라우팅을 추가했다. 이 과정에서 <strong>미등록 모델 키가 OpenRouter 로 조용히 폴백돼 엉뚱한 엔드포인트로 요청이 나가는 위험</strong>을 발견해 라우팅까지 함께 구현했다. per-model 엔드포인트와 API key 는 write-only 로 저장하고, 카나리 시크릿 전수 검증으로 값이 노출되지 않음을 확인했다.</p><h2 id="결과">결과<a class="hash-link" href="#결과" aria-label="이 항목으로 바로가기" title="이 항목으로 바로가기">#</a></h2><ul><li>팀 전체가 신뢰할 수 있는 <strong>단일 프롬프트 소스</strong> 확보 — 어떤 버전이 어떤 이력을 거쳐 배포됐는지 추적 가능</li><li>프롬프트 개선을 MCP 로 복붙 없이 즉시 수정·테스트할 수 있게 됐고, LLM 이 히스토리를 컨텍스트로 갖게 되면서 제안 품질도 함께 상승</li><li>테스트 과정에서 시도한 아이디어까지 버전으로 남아, 당장 채택하지 않은 시도도 나중에 cherry-picking 으로 손쉽게 되살릴 수 있게 됨</li><li>AI팀 4인이 상시 사용하며 <strong>모델 10종 · 프롬프트 30개 버전</strong>을 관리. 프롬프트 수정·테스트에 걸리던 시간이 <strong>1시간 → 30분으로 단축</strong>되어 테스트를 더 자주 돌릴 수 있게 됨</li></ul>
+  <footer class="doc-footer">
+    <p>최종 수정 2026.08.06 · 요약은 <a href="../index.html#프롬프트-관리-툴-개발-사내-llmops">이력서</a>에 있습니다.</p>
+  </footer>
+</article>
+<nav class="toc" aria-label="목차"><ul><li class="lv2"><a href="#문제">문제</a></li><li class="lv2"><a href="#해결-순서">해결 순서</a></li><li class="lv2"><a href="#기술-의사결정">기술 의사결정</a></li><li class="lv3"><a href="#db화-단일-소스-확보가-먼저">DB화 — 단일 소스 확보가 먼저</a></li><li class="lv3"><a href="#드라이런-렌더-엔드포인트">드라이런 렌더 엔드포인트</a></li><li class="lv3"><a href="#편집용-mcp-서버-복붙-왕복을-없앤-지점">편집용 MCP 서버 — 복붙 왕복을 없앤 지점</a></li><li class="lv3"><a href="#git-형상관리-개념을-프롬프트에-적용">git 형상관리 개념을 프롬프트에 적용</a></li><li class="lv3"><a href="#handlebars-전환과-골든-스냅샷-검증">Handlebars 전환과 골든 스냅샷 검증</a></li><li class="lv3"><a href="#모델-관리-통합-중-발견한-폴백-위험">모델 관리 통합 중 발견한 폴백 위험</a></li><li class="lv2"><a href="#결과">결과</a></li></ul></nav>
+</div>
+</body>
+</html>

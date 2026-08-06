@@ -397,6 +397,154 @@ code {
   white-space: nowrap;
 }
 
+/* 이력서 → 상세 페이지 링크 */
+.task-more {
+  margin: .4rem 0 0 !important;
+  font-size: .875rem !important;
+  line-height: 1.45;
+}
+
+.task-more a {
+  color: var(--accent-ink);
+  font-weight: 500;
+  text-decoration: underline;
+  text-decoration-color: var(--accent-rule);
+  text-underline-offset: .2em;
+}
+
+.task-more a:hover { text-decoration-color: var(--accent-ink); }
+
+/* ── 프로젝트 상세 페이지 (works/*.html) ───────────────────── */
+.back-link {
+  display: inline-block;
+  margin-bottom: 1.75rem;
+  font-size: .875rem;
+  color: var(--ink-3);
+}
+
+.back-link:hover { color: var(--accent-ink); text-decoration: none; }
+
+/* 한 줄 요약 — 본문보다 크고 옅게, 제목 바로 아래 */
+.lead {
+  font-size: 1.375rem !important;
+  line-height: 1.45;
+  color: var(--ink-2) !important;
+  margin-bottom: 1.5rem !important;
+}
+
+/* 기간 · 소속 · 역할 · 링크 */
+.detail-meta {
+  list-style: none;
+  margin: 0 0 1.5rem !important;
+  padding: 1rem 0 !important;
+  border-top: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+}
+
+.detail-meta li {
+  display: grid;
+  grid-template-columns: 4.5rem 1fr;
+  gap: .5rem;
+  margin-bottom: .3rem;
+  font-size: .9375rem;
+}
+
+.detail-meta li:last-child { margin-bottom: 0; }
+.detail-meta .k { color: var(--ink-3); font-weight: 500; }
+.detail-meta .v { color: var(--ink); min-width: 0; }
+.detail-meta a { color: var(--accent-ink); text-decoration: underline;
+                 text-decoration-color: var(--accent-rule); text-underline-offset: .2em; }
+
+/* 아키텍처 다이어그램 — 좁은 화면에서는 블록 안에서만 가로 스크롤 */
+.diagram {
+  margin: 0 0 1.5rem;
+  padding: 1.25rem;
+  background: var(--wash);
+  border: 1px solid var(--rule);
+  border-left: 3px solid var(--accent-line);
+  border-radius: .4rem;
+  overflow-x: auto;
+  font-family: var(--mono);
+  font-size: .8125rem;
+  line-height: 1.55;
+  color: var(--ink-2);
+  white-space: pre;
+  tab-size: 2;
+}
+
+/* ── 그림 ──────────────────────────────────────────────────── */
+.figure { margin: 0 0 1.75rem; }
+
+.figure img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--rule);
+  border-radius: .4rem;
+  background: var(--wash);
+}
+
+.figure figcaption {
+  margin-top: .6rem;
+  font-size: .8125rem;
+  line-height: 1.5;
+  color: var(--ink-3);
+}
+
+/* 아직 이미지를 넣지 않은 자리. 넣을 위치와 파일 경로를 그대로 보여준다. */
+.figure-slot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: .55rem;
+  min-height: 11rem;
+  padding: 1.75rem 1.25rem;
+  text-align: center;
+  background: var(--accent-soft);
+  border: 1px dashed var(--accent-line);
+  border-radius: .4rem;
+}
+
+.figure-slot-tag {
+  font-size: .75rem;
+  font-weight: 600;
+  letter-spacing: .02em;
+  color: var(--accent-ink);
+}
+
+.figure-slot code {
+  font-size: .8125rem;
+  background: var(--bg);
+  border-color: var(--accent-rule);
+  word-break: break-all;
+}
+
+.figure-slot-hint {
+  max-width: 34rem;
+  font-size: .8125rem;
+  line-height: 1.5;
+  color: var(--ink-3);
+}
+
+/* 자리 표시일 때는 캡션이 중복이라 숨긴다 — hint 가 같은 내용을 보여준다 */
+.figure-empty figcaption { display: none; }
+
+/* 상세 페이지는 본문 문단이 이력서보다 길다.
+   이력서의 .doc p (20px) 는 요약문 크기라 긴 산문에는 크다 — 읽기 크기로 내린다. */
+.doc-detail p { font-size: 1rem; line-height: 1.65; }
+.doc-detail p.lead { font-size: 1.375rem; line-height: 1.45; }
+.doc-detail li { font-size: .9375rem; line-height: 1.6; margin-bottom: .4rem; }
+.doc-detail h2 { margin-top: 3rem; }
+.doc-detail h3 { margin-top: 2rem; font-size: 1.25rem; }
+.doc-detail ul ul { margin-top: .35rem; margin-bottom: .5rem; }
+
+@media (max-width: 40rem) {
+  .doc-detail p.lead { font-size: 1.125rem; }
+  .detail-meta li { grid-template-columns: 3.75rem 1fr; font-size: .875rem; }
+  .diagram { font-size: .6875rem; padding: .875rem; }
+}
+
 /* ── 학력 · 그 외 ──────────────────────────────────────────── */
 .bg-group { margin-bottom: 1.25rem; }
 .bg-group > h4 { font-weight: 600; margin-bottom: .35rem; }

@@ -28,6 +28,21 @@ REDACT_FIELDS = {"연봉", "이직사유"}
 # 사이트 카피 (이력서 본문이 아니라 편집 문구이므로 여기서 관리한다)
 GREETING = "AI Engineer 김태종입니다."
 
+# ── 프로젝트 상세 페이지 ──────────────────────────────────────────────
+# {resume.md 의 수행업무 제목: 슬러그}
+# 슬러그는 원본 portfolio/<슬러그>.md 와 산출물 works/<슬러그>.html 양쪽에 쓰인다.
+# 여기 추가하면 이력서에 "상세 보기" 링크가 붙고, build_portfolio.py 가 원본을 요구한다.
+# build_portfolio.py 가 이 상수를 import 하므로 두 스크립트의 목록이 어긋날 수 없다.
+#
+# 산출물이 works/ 인 이유: projects/ 는 .gitignore 전체 차단 대상이라
+# 그 아래 HTML 을 두면 GitHub Pages 에 배포되지 않는다.
+DETAIL_PAGES = {
+    "캐릭터 제작 에이전트 개발 (멀티 에이전트)": "character-agent",
+    "프롬프트 관리 툴 개발 (사내 LLMOps)": "prompt-ops",
+    "자체 서빙 모델 콘텐츠 필터 개발 (CoT 기반)": "content-filter",
+}
+DETAIL_DIR = "works"
+
 # 상단 네비 우측 링크. (라벨, URL) — 블로그·LinkedIn 이 생기면 여기 추가.
 NAV_LINKS = [
     ("GitHub", "https://github.com/taejongK"),
@@ -367,6 +382,10 @@ def render_task(task: Bullet, level: int = 5) -> str:
         f'<h{level} id=', f'<h{level} class="task-title" id=')
     if when:
         aside += f'<p class="task-period">{html.escape(when)}</p>'
+    detail = DETAIL_PAGES.get(title_txt)
+    if detail:
+        aside += (f'<p class="task-more"><a href="{DETAIL_DIR}/{detail}.html">'
+                  f'상세 보기 →</a></p>')
 
     main = ""
     if link:
@@ -531,9 +550,8 @@ def main():
         sys.exit(f"중단: 공개판에 민감 항목이 남았습니다 → {leaked} (index.html 미변경)")
 
     OUT.write_text(page, encoding="utf-8")
-    published = OUT.read_text(encoding="utf-8")
 
-    print(f"생성 완료: {OUT.relative_to(ROOT)} ({len(published):,} bytes)")
+    print(f"생성 완료: {OUT.relative_to(ROOT)} ({OUT.stat().st_size:,} bytes)")
     print(f"제외된 항목: {', '.join(sorted(REDACT_FIELDS))}")
 
 

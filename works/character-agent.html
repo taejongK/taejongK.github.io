@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>캐릭터 제작 에이전트 — 김태종</title>
+<meta name="description" content="Router → 병렬 Tool Agents → Idea Agent 3단계 파이프라인을 프레임워크 없이 직접 설계·구현한 멀티 에이전트 시스템.">
+<meta property="og:title" content="캐릭터 제작 에이전트 — 김태종">
+<meta property="og:description" content="Router → 병렬 Tool Agents → Idea Agent 3단계 파이프라인을 프레임워크 없이 직접 설계·구현한 멀티 에이전트 시스템.">
+<meta property="og:type" content="article">
+<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#bbe2fb">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect x='12' y='12' width='76' height='76' rx='16' fill='%23bbe2fb'/><text x='50' y='50' font-size='52' font-family='sans-serif' font-weight='700' fill='%231b6fa8' text-anchor='middle' dominant-baseline='central'>TJ</text></svg>">
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<nav class="navbar">
+  <div class="navbar-inner">
+    <a class="navbar-brand" href="../index.html">@taejongK</a>
+    <ul class="navbar-links">
+      <li><a href="../index.html#업무-경력">경력</a></li>
+      <li><a href="../index.html#그-외-경력">프로젝트</a></li>
+      <li><a href="https://github.com/taejongK" target="_blank" rel="noopener">GitHub</a></li>
+    </ul>
+  </div>
+</nav>
+
+<div class="page">
+<article class="doc doc-detail" id="top">
+  <a class="back-link" href="../index.html#캐릭터-제작-에이전트-개발-멀티-에이전트">← 이력서로 돌아가기</a>
+  <h1>캐릭터 제작 에이전트</h1>
+  <p class="lead">Router → 병렬 Tool Agents → Idea Agent 3단계 파이프라인을 프레임워크 없이 직접 설계·구현한 멀티 에이전트 시스템.</p>
+  <ul class="detail-meta"><li><span class="k">기간</span><span class="v">2026.05 ~ 2026.06 (2개월)</span></li><li><span class="k">소속</span><span class="v">(주)버블탭 AI코어팀</span></li><li><span class="k">역할</span><span class="v">단독 기획·설계·개발</span></li></ul>
+  <h6 class="label">사용 기술</h6><p class="stack"><span class="chip">FastAPI</span><span class="chip">Python 3.12+</span><span class="chip">asyncio</span><span class="chip">Pydantic</span><span class="chip">sse-starlette</span><span class="chip">Jinja2</span><span class="chip">httpx</span><span class="chip">OpenRouter API</span></p>
+<h2 id="문제">문제<a class="hash-link" href="#문제" aria-label="이 항목으로 바로가기" title="이 항목으로 바로가기">#</a></h2><p>AI 롤플레이 서비스에서 캐릭터의 품질은 곧 프롬프트의 품질이다. 그런데 유저가 직접 좋은 캐릭터 프롬프트를 쓰기는 어렵고, 그 어려움이 서비스 유입 이후 첫 이탈 지점이었다.</p><ul><li>유저가 고품질 캐릭터 프롬프트를 직접 작성하기 어려워함</li><li>캐릭터·세계관·관계를 동시에 설계해야 하는데, 단일 에이전트로 처리하면 각 영역의 깊이가 얕아짐</li><li>프롬프트 변경이 품질에 미치는 영향을 측정할 수단이 없음</li></ul><h2 id="시스템-아키텍처">시스템 아키텍처<a class="hash-link" href="#시스템-아키텍처" aria-label="이 항목으로 바로가기" title="이 항목으로 바로가기">#</a></h2><p>단일 에이전트로는 세 영역을 동시에 깊게 다룰 수 없다는 점이 구조의 출발점이다. 역할을 쪼개 병렬로 돌리고, 마지막에 하나의 목소리로 합친다.</p><pre class="diagram">유저 입력
+    │
+    ▼
+[1차]  Router  (v5.0.0)  — 비스트리밍
+       · 모드 분류        아이디어 / JSX / 진단&amp;압축
+       · Concept 생성     genre, mood, core_appeal, constraints
+       · tool_calls 선택 + per_tool_task 지시문 생성
+    │
+    ▼
+[2차]  병렬 Tool Agents  — asyncio.gather
+       ├── character_writer      이름 · 성격 · 말투 · 외모 · 배경
+       ├── narrative_designer    세계관 · 배경사건 · 현재상황 · 로어북 시드
+       └── relationship_designer 유저-캐릭터 관계 · 긴장감 · 도입부 힌트
+       (진행상황을 SSE tool_start / tool_done 으로 프론트에 실시간 전송)
+    │
+    ▼
+[3차]  Idea Agent  (v4.0.0)  — 스트리밍
+       · ToolContext(tool_results) 주입
+       · 최종 캐릭터 프롬프트 스트리밍 응답</pre><p>세 개 모드는 서로 다른 산출물을 낸다. <strong>아이디어</strong>는 캐릭터 프롬프트를 기획·작성하고, <strong>JSX</strong>는 캐릭터 상태창용 코드를 생성하며, <strong>진단&amp;압축</strong>은 기존 프롬프트의 품질을 진단하고 토큰을 절약하도록 압축한다. Router 가 입력을 보고 어느 모드인지 스스로 판단한다.</p><figure class="figure figure-empty"><div class="figure-slot"><span class="figure-slot-tag">이미지 자리</span><code>assets/works/character-agent/parallel-tools.png</code><span class="figure-slot-hint">Router 가 선택한 Tool 들이 병렬 실행되는 동안 SSE 로 진행 상태를 표시하는 화면</span></div><figcaption>Router 가 선택한 Tool 들이 병렬 실행되는 동안 SSE 로 진행 상태를 표시하는 화면</figcaption></figure><h2 id="기술-의사결정">기술 의사결정<a class="hash-link" href="#기술-의사결정" aria-label="이 항목으로 바로가기" title="이 항목으로 바로가기">#</a></h2><h3 id="langchain-langgraph-를-쓰지-않은-이유">LangChain / LangGraph 를 쓰지 않은 이유<a class="hash-link" href="#langchain-langgraph-를-쓰지-않은-이유" aria-label="이 항목으로 바로가기" title="이 항목으로 바로가기">#</a></h3><p>이전 RAG 파이프라인에서 프레임워크 내부의 검색 로직이 블랙박스로 동작해, 로컬과 프로덕션의 결과가 달라졌을 때 어디서 갈라졌는지 추적하지 못한 선례가 있었다.</p><p>에이전트 오케스트레이션은 결국 &quot;어떤 입력으로 어떤 순서로 무엇을 호출하는가&quot;의 문제이고, 이 규모에서는 직접 구현해도 난이도가 크게 높지 않다고 판단했다. 추상화 레이어를 걷어낸 대가로 동작을 전부 추적·수정할 수 있게 됐고, 실제로 Router 프롬프트를 5세대까지 고쳐 나가는 동안 이 결정의 값어치가 나왔다.</p><h3 id="병렬-tool-실행-asynciogather">병렬 Tool 실행 (asyncio.gather)<a class="hash-link" href="#병렬-tool-실행-asynciogather" aria-label="이 항목으로 바로가기" title="이 항목으로 바로가기">#</a></h3><p>캐릭터·세계관·관계를 순차 처리하면 응답 대기가 세 배가 된다. 세 Tool 의 출력 스키마가 서로 독립적이라 의존 관계가 없으므로 <code>asyncio.gather</code> 로 묶어 병렬 실행했다.</p><p>병렬 실행은 빨라지는 대신 &quot;지금 무슨 일이 일어나는지&quot;가 유저에게 안 보인다는 문제가 따라온다. SSE queue 로 <code>tool_start</code> / <code>tool_done</code> 이벤트를 프론트엔드에 실시간 전송해 어떤 에이전트가 작업 중인지 화면에 드러냈다.</p><h3 id="router-의-선택적-tool-활성화">Router 의 선택적 Tool 활성화<a class="hash-link" href="#router-의-선택적-tool-활성화" aria-label="이 항목으로 바로가기" title="이 항목으로 바로가기">#</a></h3><p>처음에는 모든 요청에 세 Tool 을 전부 실행했다. 그런데 &quot;이름만 바꿔줘&quot; 같은 일반 대화에도 세 번의 LLM 호출이 나가면서 비용이 낭비됐다. Router 가 입력을 분석해 필요한 Tool 만 골라 활성화하도록 바꿔 불필요한 호출을 걷어냈다.</p><h3 id="pydantic-으로-에이전트-간-계약-고정">Pydantic 으로 에이전트 간 계약 고정<a class="hash-link" href="#pydantic-으로-에이전트-간-계약-고정" aria-label="이 항목으로 바로가기" title="이 항목으로 바로가기">#</a></h3><p>에이전트 사이를 <code>dict</code> 로 넘기면 파싱이 실패했을 때 어느 단계에서 깨졌는지 찾기 어렵다. <code>Concept</code>, <code>ToolContext</code> Pydantic 모델로 Router 출력 → Tool 입력 → Idea Agent 입력의 스키마를 고정해, 실패 지점이 예외 메시지에 그대로 드러나게 했다.</p><h3 id="semver-프롬프트-버전-관리와-eval-루프">semver 프롬프트 버전 관리와 eval 루프<a class="hash-link" href="#semver-프롬프트-버전-관리와-eval-루프" aria-label="이 항목으로 바로가기" title="이 항목으로 바로가기">#</a></h3><ul><li>Router v1.0.0 → v5.0.0, Idea Agent v1.0.0 → v4.0.0 등 <strong>37개 프롬프트 버전</strong>을 semver 로 관리</li><li>각 버전을 Jinja2 <code>.j2</code> 파일로 보존 → 롤백·A/B 비교 가능</li><li>코드를 건드리지 않고 설정의 버전 번호만 바꿔 프롬프트 교체</li><li><code>eval_gen → eval_run → eval_report</code> LLM-as-judge 파이프라인으로 버전별 품질을 정량 비교</li></ul><figure class="figure figure-empty"><div class="figure-slot"><span class="figure-slot-tag">이미지 자리</span><code>assets/works/character-agent/eval-report.png</code><span class="figure-slot-hint">버전별 LLM-as-judge 평가 리포트 — 프롬프트를 고칠 때마다 품질이 어떻게 움직였는지</span></div><figcaption>버전별 LLM-as-judge 평가 리포트 — 프롬프트를 고칠 때마다 품질이 어떻게 움직였는지</figcaption></figure><h2 id="사용자-경험-설계">사용자 경험 설계<a class="hash-link" href="#사용자-경험-설계" aria-label="이 항목으로 바로가기" title="이 항목으로 바로가기">#</a></h2><ul><li>병렬 실행 진행 상태를 SSE 로 노출해, 여러 에이전트가 동시에 일하는 과정을 화면에 보여줌</li><li>텍스트 드래그 기반 <strong>참조 문맥(Reference Context)</strong> — 생성된 결과의 특정 부분만 선택해 그 부분을 타겟으로 수정·확장을 요청하는 UX. 전체를 다시 생성하지 않고 국소 수정이 가능하다.</li></ul><figure class="figure figure-empty"><div class="figure-slot"><span class="figure-slot-tag">이미지 자리</span><code>assets/works/character-agent/reference-context.png</code><span class="figure-slot-hint">생성 결과의 일부를 드래그해 그 부분만 타겟으로 수정을 요청하는 참조 문맥 UX</span></div><figcaption>생성 결과의 일부를 드래그해 그 부분만 타겟으로 수정을 요청하는 참조 문맥 UX</figcaption></figure><h2 id="결과">결과<a class="hash-link" href="#결과" aria-label="이 항목으로 바로가기" title="이 항목으로 바로가기">#</a></h2><figure class="figure figure-empty"><div class="figure-slot"><span class="figure-slot-tag">이미지 자리</span><code>assets/works/character-agent/result-prompt.png</code><span class="figure-slot-hint">Router → 병렬 Tool → Idea Agent 를 거쳐 완성된 캐릭터 프롬프트 결과 화면</span></div><figcaption>Router → 병렬 Tool → Idea Agent 를 거쳐 완성된 캐릭터 프롬프트 결과 화면</figcaption></figure><ul><li>Router → 병렬 Tool Agents → Idea Agent 의 3단계 멀티 에이전트 파이프라인을 프레임워크 없이 직접 설계·구현해 PoC 완성</li><li>이후 개발팀 리소스 부족으로 프로덕션 반영은 보류</li></ul>
+  <footer class="doc-footer">
+    <p>최종 수정 2026.08.06 · 요약은 <a href="../index.html#캐릭터-제작-에이전트-개발-멀티-에이전트">이력서</a>에 있습니다.</p>
+  </footer>
+</article>
+<nav class="toc" aria-label="목차"><ul><li class="lv2"><a href="#문제">문제</a></li><li class="lv2"><a href="#시스템-아키텍처">시스템 아키텍처</a></li><li class="lv2"><a href="#기술-의사결정">기술 의사결정</a></li><li class="lv3"><a href="#langchain-langgraph-를-쓰지-않은-이유">LangChain / LangGraph 를 쓰지 않은 이유</a></li><li class="lv3"><a href="#병렬-tool-실행-asynciogather">병렬 Tool 실행 (asyncio.gather)</a></li><li class="lv3"><a href="#router-의-선택적-tool-활성화">Router 의 선택적 Tool 활성화</a></li><li class="lv3"><a href="#pydantic-으로-에이전트-간-계약-고정">Pydantic 으로 에이전트 간 계약 고정</a></li><li class="lv3"><a href="#semver-프롬프트-버전-관리와-eval-루프">semver 프롬프트 버전 관리와 eval 루프</a></li><li class="lv2"><a href="#사용자-경험-설계">사용자 경험 설계</a></li><li class="lv2"><a href="#결과">결과</a></li></ul></nav>
+</div>
+</body>
+</html>

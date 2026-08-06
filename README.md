@@ -12,25 +12,58 @@ LLM 기반 AI 서비스를 기획부터 배포까지 만듭니다.
 
 ## 이 저장소
 
-이력서 사이트의 소스입니다. `resume.md` 한 파일이 원본이고, 나머지는 전부 거기서 생성됩니다.
+이력서 사이트의 소스입니다. 원본은 전부 비공개이고, 공개되는 HTML 은 거기서 생성됩니다.
 
 ```
-resume.md              원본 (비공개 — 커밋되지 않음)
+resume.md              이력서 원본 (비공개 — 커밋되지 않음)
 imgs/my_image.jpg      인쇄용 사진 원본 (비공개, 9MB)
    │
-   └─ build_site.py ──▶ index.html          공개 사이트
-                        assets/profile.jpg   웹용 사진 (41KB)
+   └─ build_site.py ──▶ index.html           공개 사이트
+                        assets/profile.jpg    웹용 사진 (41KB)
+
+portfolio/*.md         프로젝트 상세 원본 (비공개 — 커밋되지 않음)
+   │
+   └─ build_portfolio.py ──▶ works/*.html    프로젝트 상세 페이지
 ```
 
-내용을 고칠 때는 `resume.md` 를 수정하고 다시 빌드합니다. `index.html` 은 생성물이라
-직접 고치면 다음 빌드에 덮어써집니다.
+`index.html` 이 "무엇을 했는가"를 요약하면, `works/*.html` 은 아키텍처와 기술 의사결정까지
+펼칩니다. 이력서의 해당 프로젝트에 **상세 보기 →** 링크가 자동으로 붙습니다.
+
+내용을 고칠 때는 원본(`resume.md` / `portfolio/*.md`)을 수정하고 다시 빌드합니다.
+`index.html` 과 `works/*.html` 은 생성물이라 직접 고치면 다음 빌드에 덮어써집니다.
 
 ```bash
-python3 build_site.py     # index.html + assets/profile.jpg 재생성
+python3 build_portfolio.py   # works/*.html 재생성
+python3 build_site.py        # index.html + assets/profile.jpg 재생성
 
 python3 -m http.server 8899
 # → http://127.0.0.1:8899
 ```
+
+상세 페이지를 추가하려면 `build_site.py` 의 `DETAIL_PAGES` 에
+`{resume.md 의 수행업무 제목: 슬러그}` 를 넣고 `portfolio/<슬러그>.md` 를 만듭니다.
+두 스크립트가 같은 상수를 공유하므로 목록이 어긋나면 빌드가 중단됩니다.
+
+### 이미지
+
+`portfolio/<슬러그>.md` 에 **한 줄 전체**로 `![캡션](파일명.png)` 을 쓰면 그림 자리가 생깁니다.
+파일은 `assets/works/<슬러그>/` 에 넣습니다.
+
+```
+portfolio/prompt-ops.md 의  ![branch tree 화면](branch-tree.png)
+    → assets/works/prompt-ops/branch-tree.png
+```
+
+파일이 **아직 없으면** 넣을 위치와 경로를 보여주는 자리 표시가 렌더되고, 파일을 넣고 다시
+빌드하면 자동으로 이미지로 바뀝니다. 빌드가 끝날 때 비어 있는 자리를 목록으로 알려줍니다.
+
+- 자리 표시는 **공개 사이트에도 그대로 보입니다.** 넣지 않을 자리는 해당 `![..](..)` 줄을 지우세요.
+- 손으로 넣는 파일을 `works/` 아래에 두지 마세요 — 생성물이라 통째로 지워질 수 있습니다.
+- **빌드 가드는 텍스트만 검사합니다.** 스크린샷 안의 유저 대화·개인정보·API 키는
+  걸러내지 못하므로 직접 확인해야 합니다.
+
+> 산출물이 `works/` 인 이유 — `projects/` 는 `.gitignore` 전체 차단 대상이라
+> 그 아래 HTML 을 두면 GitHub Pages 에 배포되지 않습니다.
 
 ## 빌드가 자동으로 하는 일
 
@@ -75,7 +108,12 @@ python3 -m http.server 8899
 ## 공개 범위
 
 `resume.md` 는 제출용 전체판이라 연봉 같은 항목이 들어 있고, `.gitignore` 로 커밋에서
-제외됩니다. `projects/` 이하 프로젝트 소스도 실제 API 키와 업무 데이터를 포함하므로
-공개되지 않습니다.
+제외됩니다. 프로젝트 상세 원본인 `portfolio/` 도 같은 취급입니다.
+`projects/` 이하 프로젝트 소스도 실제 API 키와 업무 데이터를 포함하므로 공개되지 않습니다.
 
-공개되는 파일은 `index.html`, `assets/`, `build_site.py`, `README.md` 뿐입니다.
+공개되는 파일은 `index.html`, `works/`, `assets/`, 빌드 스크립트, `README.md` 뿐입니다.
+
+두 빌드 스크립트 모두 **검사를 먼저 하고 통과할 때만 파일을 씁니다.** 쓰고 나서 검사하면
+차단에 실패해도 민감 정보가 디스크에 남기 때문입니다. `build_portfolio.py` 는
+개인정보(연봉·이직사유) 외에 API 키 패턴과 고객 데이터 파일명도 함께 막고,
+한 파일이라도 걸리면 **아무 파일도 쓰지 않고** 중단합니다.
