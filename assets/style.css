@@ -278,8 +278,6 @@ code {
   box-shadow: 0 0 0 1px var(--accent-rule), .75rem .75rem 0 var(--accent);
 }
 
-.tagline { color: var(--ink-3) !important; }
-
 /* ── 프로필 박스 ───────────────────────────────────────────── */
 .profile {
   margin: 1.75rem 0 0 !important;

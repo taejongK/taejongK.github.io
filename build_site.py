@@ -26,8 +26,7 @@ OUT = ROOT / "index.html"
 REDACT_FIELDS = {"연봉", "이직사유"}
 
 # 사이트 카피 (이력서 본문이 아니라 편집 문구이므로 여기서 관리한다)
-GREETING = "안녕하세요. 김태종입니다."
-TAGLINE = "왜 안 되는지부터 찾습니다."
+GREETING = "AI Engineer 김태종입니다."
 
 # 상단 네비 우측 링크. (라벨, URL) — 블로그·LinkedIn 이 생기면 여기 추가.
 NAV_LINKS = [
@@ -280,7 +279,6 @@ def render_header(sections):
   <div class="masthead-row">
     <div class="masthead-text">
       <h1>{html.escape(GREETING)}</h1>
-      <p class="tagline">{html.escape(TAGLINE)}</p>
       <ul class="profile">{rows}</ul>
       <button type="button" class="print-btn" onclick="window.print()">PDF로 저장</button>
     </div>
