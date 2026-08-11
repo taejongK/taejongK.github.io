@@ -43,14 +43,24 @@ META_KEYS = ("기간", "소속", "역할", "링크")
 # 공개 전 차단 목록.
 # 앞의 셋은 build_site.py 와 동일한 개인정보 가드, 나머지는 프로젝트 소스에서
 # 문장이 딸려 올 때를 대비한 시크릿·내부 데이터 가드다.
-BANNED_WORDS = ("연봉", "이직사유", "만원")
-BANNED_PATTERNS = (
+BANNED_WORDS = ["연봉", "이직사유", "만원"]
+BANNED_PATTERNS = [
     (r"\bsk-[A-Za-z0-9_-]{16,}", "OpenAI 계열 API 키"),
     (r"\bAIza[A-Za-z0-9_-]{20,}", "Google API 키"),
     (r"\bghp_[A-Za-z0-9]{20,}", "GitHub 토큰"),
     (r"\bsk-or-v1-[A-Za-z0-9]{16,}", "OpenRouter 키"),
-    (r"cs_data\.csv", "고객 상담 원본 데이터 파일명"),
-)
+]
+
+# 사내 문자열 목록은 portfolio/_guard.py(비공개)에서 읽는다.
+# 여기에 직접 적으면 가려 놓은 이름이 이 파일을 통해 그대로 공개된다.
+# 파일이 없으면 위의 개인정보·자격증명 가드만 동작한다.
+try:
+    sys.path.insert(0, str(SRC_DIR))
+    import _guard                                    # type: ignore
+    BANNED_WORDS += list(_guard.WORDS)
+    BANNED_PATTERNS += list(_guard.PATTERNS)
+except ImportError:
+    pass
 
 
 # ── 파싱 ──────────────────────────────────────────────────────────────

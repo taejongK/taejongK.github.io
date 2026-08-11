@@ -14,7 +14,7 @@
 credentials.json
 
 # ── 프로젝트 소스 전체 (비공개) ────────────────────────────
-# 실제 API 키, 고객 상담 데이터(cs_data.csv), 벡터 DB 포함
+# 실제 API 키, 고객 상담 원본 데이터, 벡터 DB 포함
 projects/
 
 # ── 개인정보 포함 원본 (비공개) ────────────────────────────
@@ -23,6 +23,9 @@ projects/
 # 공개되는 것은 여기서 생성한 index.html 뿐이다.
 resume.md
 resume_submit.md
+# 슬라이드 덱 원본과 산출물. 제출용이므로 저장소에 올리지 않는다.
+slides/
+
 # 프로젝트 상세 페이지의 원본. resume.md 와 같은 취급 — 공개되는 것은
 # build_portfolio.py 가 생성한 works/*.html 뿐이다.
 portfolio/

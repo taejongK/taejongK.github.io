@@ -24,6 +24,10 @@ imgs/my_image.jpg      인쇄용 사진 원본 (비공개, 9MB)
 portfolio/*.md         프로젝트 상세 원본 (비공개 — 커밋되지 않음)
    │
    └─ build_portfolio.py ──▶ works/*.html    프로젝트 상세 페이지
+
+slides/deck.md         슬라이드 덱 원본 (비공개 — 커밋되지 않음)
+   │
+   └─ build_slides.py ──▶ slides/portfolio.pdf   제출용 덱 (비공개)
 ```
 
 `index.html` 이 "무엇을 했는가"를 요약하면, `works/*.html` 은 아키텍처와 기술 의사결정까지
@@ -63,6 +67,37 @@ portfolio/prompt-ops.md 의  ![branch tree 화면](branch-tree.png)
   레포 루트 전체가 배포되므로 그대로 웹에 뜹니다. 참고 자료는 `portfolio/_originals/` 로.
 - **빌드 가드는 텍스트만 검사합니다.** 스크린샷 안의 유저 대화·개인정보·API 키는
   걸러내지 못하므로 직접 확인해야 합니다.
+
+### 슬라이드 덱 — `build_slides.py`
+
+제출용 PDF 덱(29장, 16:9)을 만듭니다. Marp CLI 를 `npx` 로 부르므로 전역 설치가 필요 없습니다.
+
+```bash
+python3 build_slides.py           # slides/portfolio.pdf
+python3 build_slides.py --png     # 장별 PNG 도 함께 (검토용)
+python3 build_slides.py --check   # 검사만
+```
+
+- **`slides/` 는 통째로 `.gitignore` 대상** — 원본도 PDF 도 저장소에 올라가지 않습니다.
+- 수치·기간의 기준은 `resume.md` 입니다. 덱은 압축할 뿐 새 수치를 만들지 않습니다.
+- 가드는 개인정보에 더해 **사내 문자열** 까지 막고, 걸리면 PDF 를 만들지 않습니다.
+
+### 차단 목록은 왜 저장소에 없는가 — `portfolio/_guard.py`
+
+이미지에서 가린 이름을 스크립트의 차단 목록에 그대로 적으면, **가린 의미가 없어집니다**
+— 저장소를 통해 평문으로 공개되기 때문입니다. 그래서 사내 문자열 목록만
+`portfolio/_guard.py`(비공개)로 분리했고, 빌드 스크립트가 있으면 읽고 없으면 건너뜁니다.
+
+```
+portfolio/_guard.py   비공개 — 사내 문자열 목록
+      ↑ import (없으면 폴백)
+build_portfolio.py · build_slides.py   공개 — 개인정보·자격증명 가드만 내장
+```
+
+파일이 없어도 빌드는 됩니다. 다만 개인정보·API 키 가드만 동작하므로,
+빌드 출력의 `사내 문자열 가드 적용/미적용` 표시를 확인하세요.
+- 검토는 PNG 로 합니다. 슬라이드는 720px 고정이라 넘쳐도 자동으로 줄지 않으니,
+  좌우로 이미지를 놓을 때는 `w:` 가 아니라 **`h:` 로 높이를 맞추세요.**
 
 ### 스크린샷 모자이크 — `mask_image.py`
 
