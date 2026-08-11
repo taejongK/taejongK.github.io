@@ -88,7 +88,8 @@ def parse_blocks(lines):
             fence = []
             continue
 
-        m = re.match(r"^(#{2,3}) (.+)$", line)
+        # h4 까지 받는다. h2/h3 만 목차에 오르고 h4 는 본문 안에서만 쓰인다.
+        m = re.match(r"^(#{2,4}) (.+)$", line)
         if m:
             flush_para(); flush_list(items); items = []
             blocks.append((f"h{len(m.group(1))}", m.group(2).strip()))
@@ -100,6 +101,15 @@ def parse_blocks(lines):
         if m:
             flush_para(); flush_list(items); items = []
             blocks.append(("img", (m.group(1).strip(), m.group(2).strip())))
+            continue
+
+        # 표. `|` 로 시작하는 줄이 이어지는 동안 한 덩어리로 모은다.
+        if line.strip().startswith("|"):
+            flush_para(); flush_list(items); items = []
+            if blocks and blocks[-1][0] == "table":
+                blocks[-1][1].append(line.strip())
+            else:
+                blocks.append(("table", [line.strip()]))
             continue
 
         m = re.match(r"^( *)- (.*)$", line)
@@ -215,17 +225,39 @@ def render_figure(caption: str, filename: str, name: str, pending: list) -> str:
             f'{cap}</figure>')
 
 
+def render_table(rows: list) -> str:
+    """마크다운 표 → <table>. 넓은 표는 자기 박스 안에서만 가로 스크롤한다.
+
+    둘째 줄이 `|---|---|` 형태의 구분선이면 첫 줄을 헤더로 본다.
+    구분선이 없으면 헤더 없이 본문만 렌더한다.
+    """
+    def cells(row: str) -> list:
+        return [c.strip() for c in row.strip().strip("|").split("|")]
+
+    head, body = [], rows
+    if len(rows) >= 2 and re.fullmatch(r"\|[\s:|-]+\|", rows[1]):
+        head, body = cells(rows[0]), rows[2:]
+
+    out = '<div class="table-wrap"><table>'
+    if head:
+        out += "<thead><tr>" + "".join(f"<th>{inline(c)}</th>" for c in head) + "</tr></thead>"
+    out += "<tbody>"
+    for row in body:
+        out += "<tr>" + "".join(f"<td>{inline(c)}</td>" for c in cells(row)) + "</tr>"
+    return out + "</tbody></table></div>"
+
+
 def render_body(blocks, name: str, pending: list):
     out = ""
     for kind, value in blocks:
-        if kind == "h2":
-            out += heading(2, inline(value), anchor=value)
-        elif kind == "h3":
-            out += heading(3, inline(value), anchor=value)
+        if kind in ("h2", "h3", "h4"):
+            out += heading(int(kind[1]), inline(value), anchor=value)
         elif kind == "code":
             out += f'<pre class="diagram">{html.escape(value)}</pre>'
         elif kind == "ul":
             out += render_list(value)
+        elif kind == "table":
+            out += render_table(value)
         elif kind == "img":
             out += render_figure(value[0], value[1], name, pending)
         else:

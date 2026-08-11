@@ -537,6 +537,54 @@ code {
 .doc-detail li { font-size: .9375rem; line-height: 1.6; margin-bottom: .4rem; }
 .doc-detail h2 { margin-top: 3rem; }
 .doc-detail h3 { margin-top: 2rem; font-size: 1.25rem; }
+
+/* ── 표 ────────────────────────────────────────────────────── */
+/* 넓은 표는 페이지가 아니라 자기 박스 안에서만 가로 스크롤한다. */
+.table-wrap {
+  margin: 0 0 1.5rem;
+  overflow-x: auto;
+  border: 1px solid var(--rule);
+  border-radius: .4rem;
+}
+
+.table-wrap table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: .8125rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.table-wrap th,
+.table-wrap td {
+  padding: .5rem .75rem;
+  text-align: left;
+  border-bottom: 1px solid var(--rule);
+}
+
+.table-wrap thead th {
+  background: var(--accent-soft);
+  color: var(--ink-2);
+  font-weight: 600;
+  border-bottom-color: var(--accent-rule);
+  position: sticky;
+  top: 0;
+}
+
+.table-wrap tbody tr:last-child td { border-bottom: 0; }
+.table-wrap tbody tr:hover td { background: var(--wash); }
+.table-wrap td strong { color: var(--accent-ink); }
+
+/* 첫 열(버전·항목 이름)은 줄바꿈을 허용해 가로 폭을 줄인다 */
+.table-wrap td:first-child { white-space: normal; min-width: 6rem; }
+
+/* h4 — h3 안의 소제목. 이력서의 .doc h4(팀·직위, 굵지 않다)와 역할이 달라 따로 잡는다. */
+.doc-detail h4 {
+  margin: 1.5rem 0 .4rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--ink);
+}
 .doc-detail ul ul { margin-top: .35rem; margin-bottom: .5rem; }
 
 @media (max-width: 40rem) {

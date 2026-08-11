@@ -59,8 +59,24 @@ portfolio/prompt-ops.md 의  ![branch tree 화면](branch-tree.png)
 
 - 자리 표시는 **공개 사이트에도 그대로 보입니다.** 넣지 않을 자리는 해당 `![..](..)` 줄을 지우세요.
 - 손으로 넣는 파일을 `works/` 아래에 두지 마세요 — 생성물이라 통째로 지워질 수 있습니다.
+- **`assets/works/` 는 공개 폴더입니다.** 이미지 외에 참고용 문서(README 등)를 두지 마세요 —
+  레포 루트 전체가 배포되므로 그대로 웹에 뜹니다. 참고 자료는 `portfolio/_originals/` 로.
 - **빌드 가드는 텍스트만 검사합니다.** 스크린샷 안의 유저 대화·개인정보·API 키는
   걸러내지 못하므로 직접 확인해야 합니다.
+
+### 스크린샷 모자이크 — `mask_image.py`
+
+가릴 영역을 좌표로 기록해두고 재현 가능하게 처리합니다.
+
+```bash
+python3 mask_image.py --grid branch-tree   # 좌표를 읽을 격자 사본 생성
+python3 mask_image.py                      # MASKS 에 등록된 것 전부 처리
+python3 mask_image.py branch-tree          # 하나만
+```
+
+원본은 `portfolio/_originals/<슬러그>/` 에 백업되고(비공개), 처리는 **항상 백업본에서 다시
+시작**합니다. 재실행해도 모자이크가 겹쳐 쌓이지 않고, 좌표를 고쳐 몇 번이든 다시 돌릴 수 있습니다.
+어느 영역을 왜 가렸는지는 `MASKS` 주석에 남깁니다. 처리 후에는 확대해서 판독 불가인지 확인하세요.
 
 > 산출물이 `works/` 인 이유 — `projects/` 는 `.gitignore` 전체 차단 대상이라
 > 그 아래 HTML 을 두면 GitHub Pages 에 배포되지 않습니다.
