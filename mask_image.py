@@ -59,6 +59,11 @@ MASKS = {
     "prompt-ops/section-diff.jpeg": [
         (46, 70, 908, 742),       # diff 본문 전체 (좌측 +/- 거터는 남긴다)
     ],
+    # 상단 네비의 사내 PoC 코드네임. resume.md 에 없는 이름이라 다른 별칭과 같은 기준으로 가린다.
+    # 세 장 모두 같은 레이아웃(1383x868)이라 좌표가 동일하다.
+    "character-agent/parallel-tools.jpeg":   [(20, 11, 90, 32)],
+    "character-agent/result-prompt.jpeg":    [(20, 11, 90, 32)],
+    "character-agent/reference-context.jpeg": [(20, 11, 90, 32)],
 }
 
 
