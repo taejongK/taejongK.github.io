@@ -28,6 +28,10 @@ portfolio/*.md         프로젝트 상세 원본 (비공개 — 커밋되지 �
 slides/deck.md         슬라이드 덱 원본 (비공개 — 커밋되지 않음)
    │
    └─ build_slides.py ──▶ slides/portfolio.pdf   제출용 덱 (비공개)
+
+resume_submit.md       제출본 (비공개)
+   │
+   └─ build_docx.py ──▶ resume_submit.docx       제출용 이력서 (비공개)
 ```
 
 `index.html` 이 "무엇을 했는가"를 요약하면, `works/*.html` 은 아키텍처와 기술 의사결정까지
@@ -81,6 +85,19 @@ python3 build_slides.py --check   # 검사만
 - **`slides/` 는 통째로 `.gitignore` 대상** — 원본도 PDF 도 저장소에 올라가지 않습니다.
 - 수치·기간의 기준은 `resume.md` 입니다. 덱은 압축할 뿐 새 수치를 만들지 않습니다.
 - 가드는 개인정보에 더해 **사내 문자열** 까지 막고, 걸리면 PDF 를 만들지 않습니다.
+
+### 제출용 이력서 — `build_docx.py`
+
+```bash
+python3 build_submit.py    # resume.md → resume_submit.md (작업 메모 제거)
+python3 build_docx.py      # resume_submit.md → resume_submit.docx
+```
+
+- 서식은 `references/이력서_김태종_v1.1.0.docx` 를 **템플릿으로 재사용** 합니다 —
+  본문만 비우고 채우므로 폰트·여백·스타일이 그대로 유지됩니다.
+- 문제/방법/결과 위계는 들여쓰기 3단(0" / 0.25" / 0.5")으로 표현합니다.
+- **입력은 `resume_submit.md` 입니다.** `resume.md` 를 직접 읽으면 작업 노트가 딸려 들어갑니다.
+- 산출물은 연봉·연락처가 담긴 제출용 전체판이라 `.gitignore` 대상입니다.
 
 ### 차단 목록은 왜 저장소에 없는가 — `portfolio/_guard.py`
 
