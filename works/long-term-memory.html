@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>챗봇 장기기억 구조 — 김태종</title>
+<meta name="description" content="벡터 RAG 기억 검색이 캐릭터 챗봇에서 작동하지 않음을 평가로 규명해 걷어내고, 요약·재압축을 거쳐 자체 GPU 서빙 인덱스 기반 검색으로 다시 설계한 장기기억 아키텍처.">
+<meta property="og:title" content="챗봇 장기기억 구조 — 김태종">
+<meta property="og:description" content="벡터 RAG 기억 검색이 캐릭터 챗봇에서 작동하지 않음을 평가로 규명해 걷어내고, 요약·재압축을 거쳐 자체 GPU 서빙 인덱스 기반 검색으로 다시 설계한 장기기억 아키텍처.">
+<meta property="og:type" content="article">
+<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#bbe2fb">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect x='12' y='12' width='76' height='76' rx='16' fill='%23bbe2fb'/><text x='50' y='50' font-size='52' font-family='sans-serif' font-weight='700' fill='%231b6fa8' text-anchor='middle' dominant-baseline='central'>TJ</text></svg>">
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<nav class="navbar">
+  <div class="navbar-inner">
+    <a class="navbar-brand" href="../index.html">@taejongK</a>
+    <ul class="navbar-links">
+      <li><a href="../index.html#업무-경력">경력</a></li>
+      <li><a href="../index.html#그-외-경력">프로젝트</a></li>
+      <li><a href="https://github.com/taejongK" target="_blank" rel="noopener">GitHub</a></li>
+    </ul>
+  </div>
+</nav>
+
+<div class="page">
+<article class="doc doc-detail" id="top">
+  <a class="back-link" href="../index.html#챗봇-장기기억-구조-설계-및-인덱스-기반-검색-전환">← 이력서로 돌아가기</a>
+  <h1>챗봇 장기기억 구조</h1>
+  <p class="lead">벡터 RAG 기억 검색이 캐릭터 챗봇에서 작동하지 않음을 평가로 규명해 걷어내고, 요약·재압축을 거쳐 자체 GPU 서빙 인덱스 기반 검색으로 다시 설계한 장기기억 아키텍처.</p>
+  <ul class="detail-meta"><li><span class="k">기간</span><span class="v">2025.10 ~ 2025.11 (구조 설계) · 2026.05 ~ 2026.08 (자체 서빙 전환 및 인덱스 기반 검색 재설계)</span></li><li><span class="k">소속</span><span class="v">(주)버블탭 AI코어팀</span></li><li><span class="k">역할</span><span class="v">단독 설계·개발</span></li></ul>
+  <h6 class="label">사용 기술</h6><p class="stack"><span class="chip">Python</span><span class="chip">Docker</span><span class="chip">vLLM</span><span class="chip">OpenRouter</span><span class="chip">Jinja2</span><span class="chip">LLM-as-judge</span><span class="chip">Rubric Design</span></p>
+<h2 id="문제">문제<a class="hash-link" href="#문제" aria-label="이 항목으로 바로가기" title="이 항목으로 바로가기">#</a></h2><p>장기 대화로 갈수록 캐릭터가 앞서 나온 설정·사건을 놓치고 일관성이 무너졌다. 원인을 추적해보니 세 겹으로 얽혀 있었다.</p><ul><li>기존 장기기억은 벡터 기반 RAG 검색에 의존했는데, 캐릭터 챗봇의 유저 입력은 무언가를 직접 묻는 질문형이 아니라 배경 지식처럼 깔려 있어야 하는 형태라 검색 쿼리로 기능하지 못했다.</li><li>요약 품질 자체를 신뢰할 수 있게 측정할 기준이 없어, 모델·프롬프트를 바꿀 근거가 부족했다.</li><li>요약 모델을 자체 서빙으로 옮기려 해도, 매 턴 실행되는 고빈도 작업이라 지연·비용에 민감한데 이를 검증할 서빙 환경이 없었다.</li></ul><h2 id="아키텍처-변천-세-단계">아키텍처 변천 — 세 단계<a class="hash-link" href="#아키텍처-변천-세-단계" aria-label="이 항목으로 바로가기" title="이 항목으로 바로가기">#</a></h2><p>한 번에 지금 구조로 간 게 아니라, 매 단계에서 측정하고 다음 단계로 넘어갔다.</p><pre class="diagram">1단계  벡터 RAG 기억 검색        유저 입력을 쿼리 삼아 벡터 검색
+       (기존 구조, 제거)          → 평가셋으로 측정하니 Recall 약 10% — 입력이 질문형이 아니라 근본적으로 안 맞음
+                                   │
+                                   ▼
+2단계  요약·재압축(SummaryMemory) 매 10턴마다 누적 대화를 자동 요약해 프롬프트에 주입
+       (2025.10–11 설계)          6,000자를 넘으면 기존 요약을 다시 압축 — 장기 세션에서도 토큰 낭비 없이 유지
+                                   │
+                                   ▼
+3단계  인덱스 기반 메모리 검색    요약에 더해, 매 턴 인덱스 구성요소를 추출해 인덱스에 적재
+       (2026.05–08 재설계)        같은 모델이 필요한 순간 인덱스를 조회해 청크만 선택적으로 검색
+                                   → Precision@5 90.2% / Recall@5 84.3%</pre><h2 id="기술-의사결정">기술 의사결정<a class="hash-link" href="#기술-의사결정" aria-label="이 항목으로 바로가기" title="이 항목으로 바로가기">#</a></h2><h3 id="벡터-rag를-개선이-아니라-제거로-판단한-이유">벡터 RAG를 개선이 아니라 제거로 판단한 이유<a class="hash-link" href="#벡터-rag를-개선이-아니라-제거로-판단한-이유" aria-label="이 항목으로 바로가기" title="이 항목으로 바로가기">#</a></h3><p>검색 정제 레이어(리랭커·쿼리 재작성 등)를 얹는 방안도 있었다. 하지만 문제의 근원이 &quot;검색이 정교하지 않다&quot;가 아니라 &quot;유저 입력 자체가 검색 쿼리로 기능할 수 없는 형태&quot;라는 걸 평가로 확인한 뒤로는, 레이어를 더 얹는 게 비용 대비 실익이 없다고 판단했다. 구조 자체를 요약 기반으로 바꾸는 쪽을 택한 이유다.</p><h3 id="왜-곧장-인덱스-검색으로-안-가고-요약을-먼저-거쳤나">왜 곧장 인덱스 검색으로 안 가고 요약을 먼저 거쳤나<a class="hash-link" href="#왜-곧장-인덱스-검색으로-안-가고-요약을-먼저-거쳤나" aria-label="이 항목으로 바로가기" title="이 항목으로 바로가기">#</a></h3><p>캐릭터의 정적인 설정(이름·성격·배경)은 이미 시스템 프롬프트가 담당한다. 장기기억이 실제로 추적해야 하는 건 &quot;무엇이 바뀌었는가&quot;라는 델타뿐이다. 그래서 1차로는 가장 단순한 안 — 누적 대화를 통째로 요약해 매 턴 주입하는 구조를 먼저 세우고 측정했다. 요약 프롬프트도 그 기준으로 다듬었다: 정적 배경은 제외하고 감정·시간·위치·아이템·행동 5개 델타 도메인만 체크하도록, 그리고 &quot;마지막 문장은 현재 상태로 종료&quot;하도록 규칙을 넣었다. 이 단계에서 사람 평가와 상관관계 0.85로 캘리브레이션한 6축 루브릭을 함께 만들어, 이후 모든 변경을 이 잣대로 검증했다.</p><h3 id="자체-gpu-서빙-환경을-직접-구성한-이유">자체 GPU 서빙 환경을 직접 구성한 이유<a class="hash-link" href="#자체-gpu-서빙-환경을-직접-구성한-이유" aria-label="이 항목으로 바로가기" title="이 항목으로 바로가기">#</a></h3><p>요약 모델을 외부 API에서 자체 서빙으로 옮기기로 한 뒤, B300 GPU에 gemma-e4b를 서빙하는 Docker 이미지를 직접 구성했다. 매 턴 실행되는 작업이라 지연과 비용이 그대로 서비스 체감으로 이어지기 때문에, 정밀도를 낮출 여지가 있는지부터 확인했다.</p><ul><li>4/8/16bit 세 정밀도로 검색 성능과 응답 지연을 각각 실측</li><li><strong>검색 품질은 정밀도 간 유의한 차이가 없었다</strong> — 정밀도를 낮춘다고 품질이 깨지지 않는다는 뜻</li><li><strong>16bit에서만 응답 지연(TTFT)이 늘어나는 것을 확인</strong>해, 품질 손실 없이 지연이 짧은 8bit을 최종 채택</li></ul><h3 id="같은-모델에-요약과-인덱스-추출을-함께-태운-구조">같은 모델에 요약과 인덱스 추출을 함께 태운 구조<a class="hash-link" href="#같은-모델에-요약과-인덱스-추출을-함께-태운-구조" aria-label="이 항목으로 바로가기" title="이 항목으로 바로가기">#</a></h3><p>3단계로 넘어가면서 매 턴 해야 할 일이 늘었다 — 대화 요약과 인덱스 구성요소 추출 두 가지다. 이 둘을 별도 모델·별도 호출로 나누지 않고 같은 자체 서빙 모델이 함께 처리하도록 묶었다. 턴마다 발생하는 부가 LLM 호출을 하나의 서빙 인프라로 흡수시켜, 인덱스 기능을 얹는다고 매 턴 호출 수가 배로 늘지 않게 한 것이다. 검색이 필요한 순간에도 같은 모델이 인덱스를 조회해 필요한 청크만 선택적으로 가져온다 — 전체 인덱스를 매번 프롬프트에 욱여넣지 않는다.</p><h3 id="평가셋을-상위-모델-라벨링-육안-샘플-검증으로-구축">평가셋을 상위 모델 라벨링 + 육안 샘플 검증으로 구축<a class="hash-link" href="#평가셋을-상위-모델-라벨링-육안-샘플-검증으로-구축" aria-label="이 항목으로 바로가기" title="이 항목으로 바로가기">#</a></h3><p>검색 성능(Precision@5 / Recall@5)을 측정하려면 정답 라벨이 있는 평가셋이 필요했다. 실서비스 대화 1,000건을 상위 모델로 자동 라벨링하되, 그 라벨을 그대로 믿지 않고 50건을 랜덤 샘플링해 육안으로 검증했다. 라벨링 프롬프트 자체를 이 검증 결과로 반복 교정한 뒤에야 정확도를 확보했다 — 콘텐츠 필터 프로젝트에서 라벨 오류를 전수 교정해야 했던 것과 같은 맥락으로, 자동 라벨링 결과를 곧바로 정답으로 쓰지 않는다는 원칙을 여기서도 지켰다.</p><h2 id="결과">결과<a class="hash-link" href="#결과" aria-label="이 항목으로 바로가기" title="이 항목으로 바로가기">#</a></h2><div class="table-wrap"><table><thead><tr><th>지표</th><th>이전</th><th>이후</th></tr></thead><tbody><tr><td>기억 검색 Recall</td><td>벡터 RAG 약 10%</td><td>인덱스 기반 Recall@5 84.3% (Precision@5 90.2%)</td></tr><tr><td>요약 품질 6축 루브릭 평균</td><td>3.55</td><td>3.99</td></tr><tr><td>최대 약점(CurrentStateClarity)</td><td>2.79</td><td>4.08</td></tr><tr><td>요약·인덱스 추출 비용</td><td>외부 API 종량 과금 (월 약 ₩1,710,000 규모)</td><td>자체 GPU 서빙 흡수, 추가 API 비용 ₩0</td></tr></tbody></table></div><ul><li>요약·재압축을 거쳐 인덱스 기반 검색까지 전환해 장기 세션 캐릭터 일관성 및 스토리 연속성 개선, 내부 QA 장기기억 품질 평가 2/5 → 4/5 향상</li><li>출시 후 유저 설문에서 버블챗·팅글의 장점으로 &#x27;장기 기억&#x27;이 꼽힘</li><li>자체 서빙 전환으로 기존 인프라가 요약·인덱스 추출 비용을 흡수, 추가 API 비용 없이 기능을 확장</li></ul>
+  <footer class="doc-footer">
+    <p>최종 수정 2026.09.06 · 요약은 <a href="../index.html#챗봇-장기기억-구조-설계-및-인덱스-기반-검색-전환">이력서</a>에 있습니다.</p>
+  </footer>
+</article>
+<nav class="toc" aria-label="목차"><ul><li class="lv2"><a href="#문제">문제</a></li><li class="lv2"><a href="#아키텍처-변천-세-단계">아키텍처 변천 — 세 단계</a></li><li class="lv2"><a href="#기술-의사결정">기술 의사결정</a></li><li class="lv3"><a href="#벡터-rag를-개선이-아니라-제거로-판단한-이유">벡터 RAG를 개선이 아니라 제거로 판단한 이유</a></li><li class="lv3"><a href="#왜-곧장-인덱스-검색으로-안-가고-요약을-먼저-거쳤나">왜 곧장 인덱스 검색으로 안 가고 요약을 먼저 거쳤나</a></li><li class="lv3"><a href="#자체-gpu-서빙-환경을-직접-구성한-이유">자체 GPU 서빙 환경을 직접 구성한 이유</a></li><li class="lv3"><a href="#같은-모델에-요약과-인덱스-추출을-함께-태운-구조">같은 모델에 요약과 인덱스 추출을 함께 태운 구조</a></li><li class="lv3"><a href="#평가셋을-상위-모델-라벨링-육안-샘플-검증으로-구축">평가셋을 상위 모델 라벨링 + 육안 샘플 검증으로 구축</a></li><li class="lv2"><a href="#결과">결과</a></li></ul></nav>
+</div>
+</body>
+</html>

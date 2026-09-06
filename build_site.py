@@ -37,6 +37,7 @@ GREETING = "AI Engineer 김태종입니다."
 # 산출물이 works/ 인 이유: projects/ 는 .gitignore 전체 차단 대상이라
 # 그 아래 HTML 을 두면 GitHub Pages 에 배포되지 않는다.
 DETAIL_PAGES = {
+    "챗봇 장기기억 구조 설계 및 인덱스 기반 검색 전환": "long-term-memory",
     "베타 테스터 블라인드 평가 툴 개발": "beta-blind-eval",
     "캐릭터 제작 에이전트 개발 (멀티 에이전트)": "character-agent",
     "프롬프트 관리 툴 개발 (사내 LLMOps)": "prompt-ops",
