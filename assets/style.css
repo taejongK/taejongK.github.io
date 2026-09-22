@@ -331,6 +331,19 @@ code {
 .tenure li:last-child { border-bottom: 0; }
 .tenure .period { font-size: .875rem; font-weight: 500; color: var(--ink-3); }
 
+/* 인턴·프리랜서 구간 — 목록에는 남기되 총 경력 합산에서 제외 (build_site.py EXCLUDED_FROM_TOTAL) */
+.tenure li.excluded { color: var(--ink-3); }
+.tenure li.excluded::before { background: var(--ink-4); }
+.tenure li.excluded .period { color: var(--ink-4); }
+.excluded-tag {
+  font-size: .75rem;
+  color: var(--ink-4);
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  padding: 0 .35rem;
+  line-height: 1.5;
+}
+
 /* ── 핵심 기술 ─────────────────────────────────────────────── */
 .skill-group { margin-bottom: 1.5rem; }
 .skill-group > h4 { font-weight: 600; margin-bottom: .5rem; }

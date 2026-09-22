@@ -28,8 +28,9 @@ TARGET = ROOT / "index.html"
 
 # '2025.06 ~ 현재 · 1년 3개월'
 TENURE_RE = re.compile(r"(\d{4})\.(\d{1,2}) ~ (현재|재직\s*중) · [^<]*")
-# 경력 요약 목록 안의 각 기간
-LIST_DUR_RE = re.compile(r'<span class="period">[^<·]*·\s*([^<]*)</span>')
+# 경력 요약 목록의 각 행. class="excluded" 는 build_site.py 가 인턴·프리랜서 구간에 붙인
+# 표식 — 목록에는 있지만 총 경력 합산에서는 뺀다(resume.md 작성 메모 24번).
+LIST_ROW_RE = re.compile(r'<li(?P<attrs>[^>]*)>.*?<span class="period">[^<·]*·\s*(?P<dur>[^<]*)</span>', re.S)
 TOTAL_RE = re.compile(r'(경력 요약\s*<span class="period">총 )[^<]*')
 UPDATED_RE = re.compile(r"최종 수정 \d{4}\.\d{2}\.\d{2}")
 
@@ -48,7 +49,9 @@ def refresh(html: str, today: date) -> str:
 
     tenure_block = re.search(r'<ul class="tenure">(.*?)</ul>', html, re.S)
     if tenure_block:
-        total = sum(parse_months(d) for d in LIST_DUR_RE.findall(tenure_block.group(1)))
+        total = sum(parse_months(m.group("dur"))
+                    for m in LIST_ROW_RE.finditer(tenure_block.group(1))
+                    if "excluded" not in m.group("attrs"))
         if total:
             html = TOTAL_RE.sub(lambda m: m.group(1) + fmt_months(total), html)
 

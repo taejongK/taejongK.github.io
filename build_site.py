@@ -37,6 +37,7 @@ GREETING = "AI Engineer 김태종입니다."
 # 산출물이 works/ 인 이유: projects/ 는 .gitignore 전체 차단 대상이라
 # 그 아래 HTML 을 두면 GitHub Pages 에 배포되지 않는다.
 DETAIL_PAGES = {
+    "검색 랭킹 개선안 설계 및 평가 체계 구축": "search-ranking",
     "챗봇 장기기억 구조 설계 및 인덱스 기반 검색 전환": "long-term-memory",
     "베타 테스터 블라인드 평가 툴 개발": "beta-blind-eval",
     "캐릭터 제작 에이전트 개발 (멀티 에이전트)": "character-agent",
@@ -307,6 +308,11 @@ def render_header(sections):
 """
 
 
+# 총 경력 합산에서 빼는 직위. 목록에는 그대로 남긴다 — 기록은 유지하고 합산만 제외
+# (resume.md 작성 메모 24번). refresh_dates.py 도 같은 표식(class="excluded")을 보고 건너뛴다.
+EXCLUDED_FROM_TOTAL = ("인턴", "프리랜서")
+
+
 def render_tenure(sections):
     rows, total = [], 0
     for b in parse_bullets(find(sections, "경력 사항 요약")["lines"]):
@@ -315,10 +321,14 @@ def render_tenure(sections):
         span, raw = (m.group(1), m.group(2)) if m else (when.strip(), "")
         span = period(span)
         dur = resolve_duration(span, raw)
-        total += parse_months(dur)
-        rows.append(f'<li>{inline(org.strip())} '
+        excluded = any(k in org for k in EXCLUDED_FROM_TOTAL)
+        if not excluded:
+            total += parse_months(dur)
+        li_attr = ' class="excluded"' if excluded else ""
+        tag = ' <span class="excluded-tag">합산 제외</span>' if excluded else ""
+        rows.append(f'<li{li_attr}>{inline(org.strip())} '
                     f'<span class="period">{html.escape(span)}'
-                    f'{" · " + html.escape(dur) if dur else ""}</span></li>')
+                    f'{" · " + html.escape(dur) if dur else ""}</span>{tag}</li>')
     badge = (f' <span class="period">총 {html.escape(fmt_months(total))}</span>'
              if total else "")
     return (heading(2, "경력 요약" + badge, anchor="경력 요약")
