@@ -25,6 +25,17 @@ OUT = ROOT / "index.html"
 # 회사별 메타 중 아래 키는 사이트에 싣지 않는다.
 REDACT_FIELDS = {"연봉", "이직사유"}
 
+# 쓰기 직전 검사에 쓰는 금칙어. 사내 문자열 목록은 portfolio/_guard.py(비공개)에서 읽는다 —
+# 여기에 직접 적으면 가려 놓은 이름이 이 파일을 통해 그대로 공개된다.
+# build_portfolio.py 와 같은 목록을 보도록 통일 (2026.09.23).
+BANNED_WORDS = ["연봉", "이직사유", "만원"]
+try:
+    sys.path.insert(0, str(ROOT / "portfolio"))
+    import _guard                                    # type: ignore
+    BANNED_WORDS += list(_guard.WORDS)
+except ImportError:
+    pass
+
 # 사이트 카피 (이력서 본문이 아니라 편집 문구이므로 여기서 관리한다)
 GREETING = "AI Engineer 김태종입니다."
 
@@ -557,7 +568,7 @@ def main():
                 .replace("__TOC__", build_toc(content))
                 .replace("__UPDATED__", date.today().strftime("%Y.%m.%d")))
     # 검사를 먼저 한다. 쓰고 나서 검사하면 차단에 실패해도 민감 정보가 디스크에 남는다.
-    leaked = [w for w in ("연봉", "이직사유", "만원") if w in page]
+    leaked = [w for w in BANNED_WORDS if w in page]
     if leaked:
         sys.exit(f"중단: 공개판에 민감 항목이 남았습니다 → {leaked} (index.html 미변경)")
 
