@@ -8,7 +8,7 @@ slides/deck.md → slides/portfolio.pdf (제출용 슬라이드 덱).
 
 ── 원본 규율 ─────────────────────────────────────────────────────────
 수치·기간의 기준은 resume.md 다. 덱은 거기서 압축할 뿐 새 수치를 만들지 않는다.
-slides/ 는 통째로 .gitignore 대상 — 원본도 PDF 도 저장소에 올리지 않는다.
+slides/ 는 통째로 .gitignore 대상, 원본도 PDF 도 저장소에 올리지 않는다.
 
 렌더링은 Marp CLI 를 npx 로 부른다(전역 설치 불필요, 최초 1회 다운로드).
 이미지는 assets/works/ 의 마스킹본을 상대경로로 참조하므로 --allow-local-files 가 필요하다.
@@ -46,7 +46,7 @@ try:
 except ImportError:
     PRIVATE_GUARD = False
 
-# 덱에 반드시 있어야 하는 것 — 실수로 통째로 날아가면 잡는다
+# 덱에 반드시 있어야 하는 것. 실수로 통째로 날아가면 잡는다
 REQUIRED = ("김태종", "AI Agent / LLM Engineer")
 
 
@@ -109,8 +109,8 @@ def main() -> None:
     used = check_images(text)
     n = slide_count(text)
 
-    guard = "적용" if PRIVATE_GUARD else "미적용 — portfolio/_guard.py 없음(개인정보 가드만 동작)"
-    print(f"검사 통과 — 슬라이드 {n}장 · 이미지 {len(used)}개 · 사내 문자열 가드 {guard}")
+    guard = "적용" if PRIVATE_GUARD else "미적용, portfolio/_guard.py 없음(개인정보 가드만 동작)"
+    print(f"검사 통과: 슬라이드 {n}장 · 이미지 {len(used)}개 · 사내 문자열 가드 {guard}")
     for u in used:
         print(f"   · {u}")
     if check_only:
@@ -124,7 +124,7 @@ def main() -> None:
         pngs = sorted((SRC.parent / "png").glob("*.png"))
         print(f"검토용 PNG {len(pngs)}장: slides/png/")
 
-    print("\n※ slides/ 는 .gitignore 대상입니다 — 저장소에 올라가지 않습니다.")
+    print("\n※ slides/ 는 .gitignore 대상입니다. 저장소에 올라가지 않습니다.")
 
 
 if __name__ == "__main__":

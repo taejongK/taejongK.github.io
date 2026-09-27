@@ -3,7 +3,7 @@
 resume.md (비공개 전체판) → index.html (공개 사이트) 생성기.
 
 resume.md 가 유일한 원본이다. 이 스크립트는 거기서 공개해도 되는 내용만
-골라내 정적 사이트를 만든다. index.html 을 직접 고치지 말 것 — 다음 빌드에
+골라내 정적 사이트를 만든다. index.html 을 직접 고치지 말 것. 다음 빌드에
 덮어써진다. 내용을 바꾸려면 resume.md 를 고치고 다시 실행한다.
 
     python3 build_site.py
@@ -25,7 +25,7 @@ OUT = ROOT / "index.html"
 # 회사별 메타 중 아래 키는 사이트에 싣지 않는다.
 REDACT_FIELDS = {"연봉", "이직사유"}
 
-# 쓰기 직전 검사에 쓰는 금칙어. 사내 문자열 목록은 portfolio/_guard.py(비공개)에서 읽는다 —
+# 쓰기 직전 검사에 쓰는 금칙어. 사내 문자열 목록은 portfolio/_guard.py(비공개)에서 읽는다.
 # 여기에 직접 적으면 가려 놓은 이름이 이 파일을 통해 그대로 공개된다.
 # build_portfolio.py 와 같은 목록을 보도록 통일 (2026.09.23).
 BANNED_WORDS = ["연봉", "이직사유", "만원"]
@@ -57,7 +57,7 @@ DETAIL_PAGES = {
 }
 DETAIL_DIR = "works"
 
-# 상단 네비 우측 링크. (라벨, URL) — 블로그·LinkedIn 이 생기면 여기 추가.
+# 상단 네비 우측 링크. (라벨, URL). 블로그·LinkedIn 이 생기면 여기 추가.
 NAV_LINKS = [
     ("GitHub", "https://github.com/taejongK"),
 ]
@@ -69,7 +69,7 @@ PHOTO_SRC = ROOT / "imgs" / "my_image.jpg"
 PHOTO_OUT = ROOT / "assets" / "profile.jpg"
 PHOTO_BOX = (440, 587)          # 파생본 픽셀 (화면 표시 220x293 의 2배)
 # 원본에서 잘라낼 영역 비율 (좌, 상, 우, 하).
-# 얼굴 중심(가로 0.507)에 맞춘 3:4 상반신 프레임 — 머리가 세로의 약 43% 를 차지한다.
+# 얼굴 중심(가로 0.507)에 맞춘 3:4 상반신 프레임. 머리가 세로의 약 43% 를 차지한다.
 PHOTO_CROP = (0.226, 0.10, 0.788, 0.60)
 
 
@@ -135,7 +135,7 @@ def heading(level: int, text_html: str, anchor: str = "") -> str:
 
 def period(text: str) -> str:
     """'2025.06–현재' → '2025.06 ~ 현재'. 레퍼런스의 물결 표기를 따른다."""
-    return re.sub(r"\s*[–—-]\s*", " ~ ", text.strip())
+    return re.sub(r"\s*[–\u2014-]\s*", " ~ ", text.strip())
 
 
 def duration(text: str) -> str:
@@ -319,7 +319,7 @@ def render_header(sections):
 """
 
 
-# 총 경력 합산에서 빼는 직위. 목록에는 그대로 남긴다 — 기록은 유지하고 합산만 제외
+# 총 경력 합산에서 빼는 직위. 목록에는 그대로 남긴다. 기록은 유지하고 합산만 제외
 # (resume.md 작성 메모 24번). refresh_dates.py 도 같은 표식(class="excluded")을 보고 건너뛴다.
 EXCLUDED_FROM_TOTAL = ("인턴", "프리랜서")
 
@@ -507,9 +507,9 @@ PAGE = """<!DOCTYPE html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>김태종 — AI Engineer</title>
+<title>김태종 | AI Engineer</title>
 <meta name="description" content="정량화하기 어려운 것에 기준을 세우는 AI 엔지니어. LLM 평가 체계, 에이전트 아키텍처, LLMOps.">
-<meta property="og:title" content="김태종 — AI Engineer">
+<meta property="og:title" content="김태종 | AI Engineer">
 <meta property="og:description" content="정량화하기 어려운 것에 기준을 세우는 AI 엔지니어. LLM 평가 체계, 에이전트 아키텍처, LLMOps.">
 <meta property="og:type" content="profile">
 <meta name="color-scheme" content="light">

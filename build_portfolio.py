@@ -11,7 +11,7 @@ portfolio/<slug>.md (비공개 원본) → works/<slug>.html (공개 상세 페�
 수치·기간·귀속의 기준은 언제나 resume.md 다. portfolio/*.md 는 거기에 없는
 아키텍처 다이어그램과 기술 의사결정 서술만 덧붙인다. 두 문서가 충돌하면
 resume.md 가 옳다 (projects/*/overview.md 는 2026.08.01 정정 이전 값이 남아 있어
-그대로 옮기면 안 된다 — 만족도 87%→86%, 로그 필드 35개→25개 등).
+그대로 옮기면 안 된다. 만족도 87%→86%, 로그 필드 35개→25개 등).
 
 렌더링 함수는 build_site.py 를 그대로 가져다 쓴다. 이력서와 상세 페이지의
 타이포·칩·앵커 동작을 한 곳에서 관리하기 위함이다.
@@ -300,9 +300,9 @@ PAGE = """<!DOCTYPE html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>__TITLE__ — 김태종</title>
+<title>__TITLE__ | 김태종</title>
 <meta name="description" content="__LEAD__">
-<meta property="og:title" content="__TITLE__ — 김태종">
+<meta property="og:title" content="__TITLE__ | 김태종">
 <meta property="og:description" content="__LEAD__">
 <meta property="og:type" content="article">
 <meta name="color-scheme" content="light">
@@ -404,13 +404,13 @@ def main():
 
     if pending:
         print(f"\n※ 아직 비어 있는 이미지 자리 {len(pending)}개 "
-              f"— 파일을 넣고 다시 빌드하면 자동으로 바뀝니다.")
+              f"파일을 넣고 다시 빌드하면 자동으로 바뀝니다.")
         for p in pending:
             print(f"   · {p}")
         print("   (자리 표시는 공개 사이트에도 그대로 보입니다.\n"
               "    넣지 않을 자리는 portfolio/*.md 에서 해당 ![..](..) 줄을 지우세요.)")
         print("   ⚠ 스크린샷에 실제 유저 대화·개인정보·API 키가 찍히지 않았는지\n"
-              "     직접 확인하세요 — 빌드 가드는 텍스트만 검사하며 이미지 안은 못 봅니다.")
+              "     직접 확인하세요. 빌드 가드는 텍스트만 검사하며 이미지 안은 못 봅니다.")
 
 
 if __name__ == "__main__":
