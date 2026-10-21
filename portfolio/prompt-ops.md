@@ -1,6 +1,6 @@
 # 프롬프트 관리 툴 (사내 LLMOps)
 
-> git 의 형상관리 개념을 프롬프트에 그대로 옮긴 사내 도구. DB화 · 렌더 API · MCP 서버 · diff/merge/cherry-picking 까지.
+> git 의 형상관리 개념을 프롬프트에 그대로 옮긴 사내 도구. DB화 · 렌더 API · MCP 서버 · diff/cherry-picking 까지.
 
 - 기간: 2026.07 (1개월)
 - 소속: (주)버블탭 AI코어팀
@@ -34,8 +34,8 @@
                     복붙 왕복 제거 + LLM 이 히스토리를 컨텍스트로 확보
                         │
                         ▼
-④ git 형상관리 적용  배포 버전 지정 · 섹션 단위 diff · merge
-                    cherry-picking · branch tree 히스토리 시각화
+④ git 형상관리 적용  배포 버전 지정 · 섹션 단위 diff
+                    cherry-picking(출처 계보 기록) · branch tree 히스토리 시각화
 ```
 
 ## 기술 의사결정
@@ -87,8 +87,7 @@ MCP 경로로 만들어지는 것은 **draft 뿐**이라 서빙에는 영향이 
 
 - **배포 버전 지정**: 어느 버전이 지금 프로덕션에 나가 있는지 명시적으로 관리
 - **섹션 단위 diff**: 비교 알고리즘을 외부 라이브러리 없이 직접 구현해 프롬프트를 섹션 단위로 비교
-- **merge**: 서로 다른 버전의 변경을 합침
-- **cherry-picking**: 특정 버전의 개별 섹션만 골라 가져옴
+- **cherry-picking**: 특정 버전의 개별 섹션만 골라 가져오고, 가져온 출처를 계보에 병합 기록으로 남김. 공통 조상을 찾아 자동으로 합치는 3-way merge 는 범위에서 뺐다. 같은 base 에서 갈라진 draft 둘의 장점을 섞는 게 실제 필요였고, 그건 섹션 단위 cherry-pick 으로 충분했다
 - **branch tree 히스토리 시각화**: 버전 계보를 git branch tree 형태로 표시
 
 ![프롬프트 버전 계보를 git branch tree 형태로 표시한 히스토리 화면](branch-tree.jpeg)
