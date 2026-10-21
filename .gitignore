@@ -18,18 +18,16 @@ credentials.json
 projects/
 
 # ── 개인정보 포함 원본 (비공개) ────────────────────────────
-# resume.md 는 연봉·이직사유가 들어간 제출용 전체판.
-# resume_submit.md / .docx 는 거기서 작업 메모만 걷어낸 제출본. 개인정보는 그대로다.
-# 공개되는 것은 여기서 생성한 index.html 뿐이다.
-resume.md
+# resume.md · portfolio/*.md 는 공개 원본이라 커밋한다(빌드가 원본까지 금칙어 검사).
+# 연봉 등 비공개 정보는 resume.md 에 적지 않는다. 산출물인 제출본만 비공개다.
 resume_submit.md
 resume_submit.docx
 # 슬라이드 덱 원본과 산출물. 제출용이므로 저장소에 올리지 않는다.
 slides/
 
-# 프로젝트 상세 페이지의 원본. resume.md 와 같은 취급. 공개되는 것은
-# build_portfolio.py 가 생성한 works/*.html 뿐이다.
-portfolio/
+# 사내 문자열 차단 목록과 모자이크 전 원본 이미지
+portfolio/_guard.py
+portfolio/_originals/
 references/
 my_profile/
 # 지원 현황·회사별 정리 메모

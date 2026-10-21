@@ -385,7 +385,8 @@ def main():
             missing.append(src.name)
             continue
         page = build_page(src, slug(resume_title), name, pending)
-        audit(src.name, page)
+        # 원본도 커밋·배포되므로 주석까지 포함해 같은 가드를 건다.
+        audit(src.name, src.read_text(encoding="utf-8") + page)
         pages.append((name, page))
 
     if missing:

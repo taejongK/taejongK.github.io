@@ -12,16 +12,17 @@ LLM 기반 AI 서비스를 기획부터 구현·검증까지 만듭니다.
 
 ## 이 저장소
 
-이력서 사이트의 소스입니다. 원본은 전부 비공개이고, 공개되는 HTML 은 거기서 생성됩니다.
+이력서 사이트의 소스입니다. 사이트 원본(`resume.md`, `portfolio/*.md`)은 저장소에 함께 있어
+클론만으로 다시 빌드할 수 있습니다. 원본도 그대로 배포되므로 **공개해도 되는 내용만** 적습니다.
 
 ```
-resume.md              이력서 원본 (비공개, 커밋되지 않음)
-imgs/my_image.jpg      인쇄용 사진 원본 (비공개, 9MB)
+resume.md              이력서 원본 (공개, 커밋됨)
+imgs/my_image.jpg      인쇄용 사진 원본 (비공개, 9MB, 없으면 assets/profile.jpg 를 그대로 사용)
    │
    └─ build_site.py ──▶ index.html           공개 사이트
                         assets/profile.jpg    웹용 사진 (41KB)
 
-portfolio/*.md         프로젝트 상세 원본 (비공개, 커밋되지 않음)
+portfolio/*.md         프로젝트 상세 원본 (공개, 커밋됨)
    │
    └─ build_portfolio.py ──▶ works/*.html    프로젝트 상세 페이지
 
@@ -33,6 +34,15 @@ resume_submit.md       제출본 (비공개)
    │
    └─ build_docx.py ──▶ resume_submit.docx       제출용 이력서 (비공개)
 ```
+
+> **원본 이력 (2026.10)**: 원래 `resume.md`·`portfolio/*.md` 는 비공개라 커밋되지 않았고,
+> 작업 환경을 옮기면서 저장소 밖(이전 계정 폴더)에 남겨졌습니다. 지금 원본은 공개 중이던 `index.html`·`works/*.html` 에서
+> 역생성한 것이며, 다시 빌드하면 기존 HTML 과 같은 결과가 나오는 것을 확인했습니다.
+> HTML 에 없던 작업 메모(주석·인용 줄)와 연봉·이직사유·전체 주소는 복구되지 않았습니다.
+>
+> 이제 사이트를 고치거나 빌드할 때 **저장소 밖 폴더는 참고하지 않습니다.**
+> 특히 `~/workspace/github/portfolio` 는 2026.05 의 이전 생성 시스템(영문 형식 `resume.md` →
+> `portfolio_web/index.html`)으로, 이 사이트의 원본이 아니며 내용도 더 오래됐습니다.
 
 `index.html` 이 "무엇을 했는가"를 요약하면, `works/*.html` 은 아키텍처와 기술 의사결정까지
 펼칩니다. 이력서의 해당 프로젝트에 **상세 보기 →** 링크가 자동으로 붙습니다.
@@ -97,7 +107,9 @@ python3 build_docx.py      # resume_submit.md → resume_submit.docx
   본문만 비우고 채우므로 폰트·여백·스타일이 그대로 유지됩니다.
 - 문제/방법/결과 위계는 들여쓰기 3단(0" / 0.25" / 0.5")으로 표현합니다.
 - **입력은 `resume_submit.md` 입니다.** `resume.md` 를 직접 읽으면 작업 노트가 딸려 들어갑니다.
-- 산출물은 연봉·연락처가 담긴 제출용 전체판이라 `.gitignore` 대상입니다.
+- `resume.md` 는 공개 원본이라 연봉 같은 항목이 없습니다. 제출본에 필요하면
+  `build_submit.py` 실행 **뒤에** `resume_submit.md` 에 직접 추가합니다(다시 실행하면 덮어써짐).
+- 제출본과 docx 는 `.gitignore` 대상입니다. 템플릿(`references/`)도 비공개라 클론에는 없습니다.
 
 ### 차단 목록은 왜 저장소에 없는가: `portfolio/_guard.py`
 
@@ -135,8 +147,9 @@ python3 mask_image.py branch-tree          # 하나만
 
 ## 빌드가 자동으로 하는 일
 
-- **민감 항목 제거**: `REDACT_FIELDS`(연봉)를 걸러내고, 주소는 동 단위까지만 남깁니다.
-  마지막에 결과물을 다시 검사해서 남아 있으면 빌드를 중단합니다.
+- **민감 항목 차단**: 원본(`resume.md`, `portfolio/*.md`, 주석 포함)과 결과물을 모두 금칙어로
+  검사하고, 걸리면 빌드를 중단합니다. 원본도 공개되므로 연봉 같은 항목은 아예 적지 않습니다.
+  주소는 동 단위까지만 남깁니다.
 - **재직기간 계산**: `~ 현재` 로 끝나는 기간만 빌드 시점 날짜로 환산합니다.
   퇴사한 회사의 기간은 `resume.md` 에 적힌 값을 그대로 씁니다.
 - **경력 총합**: 각 회사 재직 개월을 합산해 `경력 요약` 제목 옆에 표기합니다.
@@ -162,9 +175,8 @@ python3 mask_image.py branch-tree          # 하나만
 `.github/workflows/refresh-dates.yml` 이 **매월 1일 09:00 KST** 에 `refresh_dates.py` 를
 돌려 갱신하고, 값이 바뀐 경우에만 커밋합니다. 저장소 Actions 탭에서 수동 실행도 됩니다.
 
-`resume.md` 는 개인정보 때문에 저장소에 없으므로 Actions 에서는 `build_site.py` 를
-돌릴 수 없습니다. 대신 `refresh_dates.py` 가 `index.html` 안의 입사 연월을 읽어
-아래 세 가지 숫자만 다시 계산합니다.
+`refresh_dates.py` 는 `index.html` 안의 입사 연월을 읽어 아래 세 가지 숫자만 다시 계산합니다.
+(`build_site.py` 를 다시 돌려도 결과는 같습니다. 숫자 외에는 아무것도 건드리지 않도록 좁혀 둔 것입니다.)
 
 - `2025.06 ~ 현재 · N년 M개월` 의 재직기간 (퇴사한 회사는 건드리지 않습니다)
 - `경력 요약` 옆의 경력 총합
@@ -175,11 +187,11 @@ python3 mask_image.py branch-tree          # 하나만
 
 ## 공개 범위
 
-`resume.md` 는 제출용 전체판이라 연봉 같은 항목이 들어 있고, `.gitignore` 로 커밋에서
-제외됩니다. 프로젝트 상세 원본인 `portfolio/` 도 같은 취급입니다.
+`resume.md` 와 `portfolio/*.md` 는 공개 원본이라 커밋되고, 저장소 루트째 배포되므로
+`/resume.md` 경로로도 열립니다. 그래서 연봉·이직사유 같은 항목은 원본에 적지 않으며,
+적으면 빌드가 중단됩니다. 제출본(`resume_submit.*`), 덱(`slides/`), 사진 원본(`imgs/`),
+사내 문자열 목록(`portfolio/_guard.py`), 모자이크 전 이미지(`portfolio/_originals/`)는 비공개입니다.
 `projects/` 이하 프로젝트 소스도 실제 API 키와 업무 데이터를 포함하므로 공개되지 않습니다.
-
-공개되는 파일은 `index.html`, `works/`, `assets/`, 빌드 스크립트, `README.md` 뿐입니다.
 
 두 빌드 스크립트 모두 **검사를 먼저 하고 통과할 때만 파일을 씁니다.** 쓰고 나서 검사하면
 차단에 실패해도 민감 정보가 디스크에 남기 때문입니다. `build_portfolio.py` 는

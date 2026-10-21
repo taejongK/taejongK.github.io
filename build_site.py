@@ -75,8 +75,11 @@ PHOTO_CROP = (0.226, 0.10, 0.788, 0.60)
 
 def build_photo():
     """원본에서 웹용 사진을 생성한다. 실패하면 사진 없이 진행한다."""
-    if PHOTO_SRC is None or not PHOTO_SRC.exists():
+    if PHOTO_SRC is None:
         return None
+    if not PHOTO_SRC.exists():
+        # 원본은 비공개라 클론에는 없다. 커밋된 웹용 파생본을 그대로 쓴다.
+        return PHOTO_OUT.name if PHOTO_OUT.exists() else None
     if PHOTO_OUT.exists() and PHOTO_OUT.stat().st_mtime >= PHOTO_SRC.stat().st_mtime:
         return PHOTO_OUT.name
     try:
@@ -555,6 +558,11 @@ __TOC__
 def main():
     if not SRC.exists():
         sys.exit(f"원본을 찾을 수 없습니다: {SRC}")
+
+    # resume.md 도 커밋·배포되는 공개 원본이다. 산출물만 검사하면 원본으로 새어 나간다.
+    leaked = [w for w in BANNED_WORDS if w in SRC.read_text(encoding="utf-8")]
+    if leaked:
+        sys.exit(f"중단: 공개 원본 resume.md 에 민감 항목이 있습니다 → {leaked}")
 
     sections = load_document()
     content = (
