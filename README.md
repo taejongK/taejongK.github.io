@@ -2,8 +2,8 @@
 
 **이력서: https://taejongK.github.io**
 
-LLM 기반 AI 서비스를 기획부터 구현·검증까지 만듭니다.
-멀티 에이전트 오케스트레이션, RAG 파이프라인, LLMOps.
+에이전트의 기억·검색 계층을 설계하고, 평가로 증명합니다.
+장기기억, 검색 랭킹, 멀티 에이전트 오케스트레이션, LLM 평가.
 
 - 메일 · xowhddk123@gmail.com
 - GitHub · [@taejongK](https://github.com/taejongK)

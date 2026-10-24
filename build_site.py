@@ -50,8 +50,7 @@ GREETING = "AI Engineer 김태종입니다."
 DETAIL_PAGES = {
     "Chat Arena 개발 (사람 블라인드 투표 기반 모델·프롬프트 비교)": "chat-arena",
     "검색 랭킹 개선안 설계 및 평가 체계 구축": "search-ranking",
-    "챗봇 장기기억 구조 설계 및 인덱스 기반 검색 전환": "long-term-memory",
-    "베타 테스터 블라인드 평가 툴 개발": "beta-blind-eval",
+    "챗봇 장기기억 구조 설계 및 커스텀 기억 검색(RRF) PoC": "long-term-memory",
     "캐릭터 제작 에이전트 개발 (멀티 에이전트)": "character-agent",
     "프롬프트 관리 툴 개발 (사내 LLMOps)": "prompt-ops",
     "자체 서빙 모델 콘텐츠 필터 개발 (CoT 기반)": "content-filter",
@@ -512,9 +511,9 @@ PAGE = """<!DOCTYPE html>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>김태종 | AI Engineer</title>
-<meta name="description" content="정량화하기 어려운 것에 기준을 세우는 AI 엔지니어. LLM 평가 체계, 에이전트 아키텍처, LLMOps.">
+<meta name="description" content="에이전트의 기억·검색 계층을 설계하고 평가로 증명하는 AI 엔지니어. 장기기억, 검색 랭킹, 에이전트 아키텍처.">
 <meta property="og:title" content="김태종 | AI Engineer">
-<meta property="og:description" content="정량화하기 어려운 것에 기준을 세우는 AI 엔지니어. LLM 평가 체계, 에이전트 아키텍처, LLMOps.">
+<meta property="og:description" content="에이전트의 기억·검색 계층을 설계하고 평가로 증명하는 AI 엔지니어. 장기기억, 검색 랭킹, 에이전트 아키텍처.">
 <meta property="og:type" content="profile">
 <meta name="color-scheme" content="light">
 <meta name="theme-color" content="#bbe2fb">
