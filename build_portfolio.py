@@ -305,20 +305,21 @@ PAGE = """<!DOCTYPE html>
 <meta property="og:title" content="__TITLE__ | 김태종">
 <meta property="og:description" content="__LEAD__">
 <meta property="og:type" content="article">
-<meta name="color-scheme" content="light">
-<meta name="theme-color" content="#bbe2fb">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect x='12' y='12' width='76' height='76' rx='16' fill='%23bbe2fb'/><text x='50' y='50' font-size='52' font-family='sans-serif' font-weight='700' fill='%231b6fa8' text-anchor='middle' dominant-baseline='central'>TJ</text></svg>">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#0b0b0c">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect x='12' y='12' width='76' height='76' rx='16' fill='%230b0b0c'/><text x='50' y='50' font-size='52' font-family='sans-serif' font-weight='700' fill='%23ff4f9a' text-anchor='middle' dominant-baseline='central'>TJ</text></svg>">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <link rel="stylesheet" href="../assets/style.css">
+<script src="../assets/site.js" defer></script>
 </head>
 <body>
 <nav class="navbar">
   <div class="navbar-inner">
     <a class="navbar-brand" href="../index.html">@taejongK</a>
     <ul class="navbar-links">
-      <li><a href="../index.html#업무-경력">경력</a></li>
-      <li><a href="../index.html#그-외-경력">프로젝트</a></li>
+      <li><a href="../index.html#history">History</a></li>
+      <li><a href="../index.html#works">Works</a></li>
       <li><a href="https://github.com/taejongK" target="_blank" rel="noopener">GitHub</a></li>
     </ul>
   </div>
@@ -326,14 +327,14 @@ PAGE = """<!DOCTYPE html>
 
 <div class="page">
 <article class="doc doc-detail" id="top">
-  <a class="back-link" href="../index.html#__BACK_ANCHOR__">← 이력서로 돌아가기</a>
+  <a class="back-link" href="../index.html#__BACK_ANCHOR__">← 지난 작업 목록으로</a>
   <h1>__TITLE__</h1>
   __LEAD_HTML__
   __META__
   __STACK__
 __CONTENT__
   <footer class="doc-footer">
-    <p>최종 수정 __UPDATED__ · 요약은 <a href="../index.html#__BACK_ANCHOR__">이력서</a>에 있습니다.</p>
+    <p>최종 수정 __UPDATED__ · <a href="../index.html#__BACK_ANCHOR__">메인으로 돌아가기</a></p>
   </footer>
 </article>
 __TOC__

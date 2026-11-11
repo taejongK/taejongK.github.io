@@ -37,7 +37,11 @@ except ImportError:
     pass
 
 # 사이트 카피 (이력서 본문이 아니라 편집 문구이므로 여기서 관리한다)
-GREETING = "AI Engineer 김태종입니다."
+GREETING = "AI Engineer 김태종"
+HERO_TITLE = "에이전트가 <em>무엇을 기억할지</em><br>설계하고, 평가로 증명합니다."   # HTML 허용
+HERO_LEAD = "장기기억 · 검색 랭킹 · 에이전트 아키텍처 · LLM 평가"
+# 히어로 숫자 카드. 총 경력·프로젝트 수는 자동 계산, 아래는 resume.md 버블탭 '서비스 규모' 값.
+HERO_STATS = [("일 30만 챗", "운영 중인 챗봇 규모")]
 
 # ── 프로젝트 상세 페이지 ──────────────────────────────────────────────
 # {resume.md 의 수행업무 제목: 슬러그}
@@ -251,83 +255,69 @@ def split_period(title):
 
 
 # ── 렌더링 ────────────────────────────────────────────────────────────
-def render_header(sections):
-    profile = {}
+# 한 페이지 회사 소개서 구성: 히어로 → 01 About → 02 History → 03 Capabilities
+# → 04 Works → 05 Contact. 섹션 id 는 영문이라 링크가 짧고 안정적이다.
+
+# 총 경력 합산에서 빼는 직위. 목록에는 그대로 남긴다. 기록은 유지하고 합산만 제외
+# (resume.md 작성 메모 24번).
+EXCLUDED_FROM_TOTAL = ("인턴", "프리랜서")
+
+# 프로젝트 본문에 소제목으로 렌더링되는 라벨. resume.md 에 적힌 순서·표기 그대로 나간다.
+# '문제 / 방법 / 결과' 가 현재 표준. 나머지는 구 문서 호환용이다.
+CONTENT_LABELS = ("문제", "방법", "결과", "해결", "성과", "역할",
+                  "Problem", "Methods", "Result")
+RESULT_LABELS = ("결과", "성과", "Result")
+
+# 기술 스택 라벨. resume.md 는 '사용 기술' 을 쓰고, 구 표기도 받는다.
+STACK_LABELS = ("사용 기술", "기술", "Skills")
+
+
+def section_head(num: str, sid: str, eyebrow: str, title: str) -> str:
+    """'01 / About' 머리말 + 큰 제목."""
+    return (f'<header class="sec-head"><p class="eyebrow"><span class="num">{num}</span>'
+            f' / {html.escape(eyebrow)}</p><h2 id="{sid}">{title}</h2></header>')
+
+
+def load_profile(sections):
     sec = find(sections, "개인신상")
+    profile = {}
     for b in parse_bullets(sec["lines"]):
         k, v = split_kv(b.text)
         if k:
             profile[re.sub(r"\s+", "", k)] = v
-
-    summary = [l.strip() for l in sec["lines"]
-               if l.strip() and not l.strip().startswith("-") and l.strip() != "---"]
-
-    nav = "".join(
-        f'<li><a href="{url}" target="_blank" rel="noopener">{html.escape(label)}</a></li>'
-        for label, url in NAV_LINKS)
-
-    name = profile.get("성명", "김태종")
-    contacts = []
-    if profile.get("이메일"):
-        contacts.append(("이메일", f'mailto:{profile["이메일"]}', profile["이메일"]))
-    if profile.get("전화번호"):
-        contacts.append(("연락처", f'tel:{profile["전화번호"].replace("-", "")}',
-                         profile["전화번호"]))
-    if profile.get("Github"):
-        contacts.append(("GitHub", profile["Github"],
-                         profile["Github"].replace("https://", "")))
-    meta = []
-    if profile.get("생년월일"):
-        meta.append(("생년월일", profile["생년월일"]))
-    if profile.get("주소"):
-        meta.append(("주소", trim_address(profile["주소"])))
-
-    rows = "".join(
-        f'<li><span class="k">{html.escape(k)}</span>'
-        f'<a href="{href}">{html.escape(v)}</a></li>' for k, href, v in contacts)
-    rows += "".join(
-        f'<li><span class="k">{html.escape(k)}</span>'
-        f'<span class="v">{html.escape(v)}</span></li>' for k, v in meta)
-
-    photo = build_photo()
-    photo_html = (
-        f'<img class="masthead-photo" src="assets/{photo}" alt="{html.escape(name)}"'
-        f' width="{PHOTO_BOX[0] // 2}" height="{PHOTO_BOX[1] // 2}">' if photo else "")
-
-    return f"""
-<nav class="navbar">
-  <div class="navbar-inner">
-    <a class="navbar-brand" href="#top">@taejongK</a>
-    <ul class="navbar-links">
-      <li><a href="#업무-경력">경력</a></li>
-      <li><a href="#그-외-경력">프로젝트</a></li>
-      {nav}
-    </ul>
-  </div>
-</nav>
-
-<div class="page">
-<article class="doc" id="top">
-  <div class="masthead-row">
-    <div class="masthead-text">
-      <h1>{html.escape(GREETING)}</h1>
-      <ul class="profile">{rows}</ul>
-      <button type="button" class="print-btn" onclick="window.print()">PDF로 저장</button>
-    </div>
-    {photo_html}
-  </div>
-
-  {heading(2, "자기소개")}
-  {"".join(f"<p>{inline(p)}</p>" for p in summary)}
-"""
+    paras = [l.strip() for l in sec["lines"]
+             if l.strip() and not l.strip().startswith("-") and l.strip() != "---"]
+    return profile, paras
 
 
-# 총 경력 합산에서 빼는 직위. 목록에는 그대로 남긴다. 기록은 유지하고 합산만 제외
-# (resume.md 작성 메모 24번). refresh_dates.py 도 같은 표식(class="excluded")을 보고 건너뛴다.
-EXCLUDED_FROM_TOTAL = ("인턴", "프리랜서")
+def load_experience(sections):
+    """경력기술서 → [{company, team, when, dur, facts{}, tasks[]}], 사이드 프로젝트 tasks."""
+    start = next(i for i, s in enumerate(sections) if s["title"] == "경력기술서")
+    companies, side = [], []
+    for sec in sections[start + 1:]:
+        if sec["level"] != 3:
+            continue
+        if sec["title"] == "사이드 프로젝트":
+            side = parse_bullets(sec["lines"])
+            continue
+        head, when, dur = split_period(sec["title"])
+        parts = [p.strip() for p in head.split(",")]
+        facts, tasks = {}, []
+        for b in parse_bullets(sec["lines"]):
+            k, v = split_kv(b.text)
+            if k and k in REDACT_FIELDS:
+                continue
+            if b.children:
+                tasks.append(b)
+            elif k:
+                facts[k] = v
+        companies.append({"company": parts[0], "team": " / ".join(parts[1:]),
+                          "when": when, "dur": dur, "facts": facts, "tasks": tasks})
+    return companies, side
 
 
-def render_tenure(sections):
+def tenure_rows(sections):
+    """경력 사항 요약 → [(기간, 기간길이, 조직, 합산제외)] 와 총 개월 수."""
     rows, total = [], 0
     for b in parse_bullets(find(sections, "경력 사항 요약")["lines"]):
         when, _, org = b.text.partition(":")
@@ -338,157 +328,229 @@ def render_tenure(sections):
         excluded = any(k in org for k in EXCLUDED_FROM_TOTAL)
         if not excluded:
             total += parse_months(dur)
-        li_attr = ' class="excluded"' if excluded else ""
-        tag = ' <span class="excluded-tag">합산 제외</span>' if excluded else ""
-        rows.append(f'<li{li_attr}>{inline(org.strip())} '
-                    f'<span class="period">{html.escape(span)}'
-                    f'{" · " + html.escape(dur) if dur else ""}</span>{tag}</li>')
-    badge = (f' <span class="period">총 {html.escape(fmt_months(total))}</span>'
-             if total else "")
-    return (heading(2, "경력 요약" + badge, anchor="경력 요약")
-            + f'<ul class="tenure">{"".join(rows)}</ul>')
+        rows.append((span, dur, org.strip(), excluded))
+    return rows, total
 
 
-def render_skills(sections):
+def parse_task(task: Bullet) -> dict:
+    t = {"when": "", "link": "", "stack": "", "stack_label": "사용 기술", "blocks": []}
+    for child in task.children:
+        k, v = split_kv(child.text)
+        if k == "기간":
+            t["when"] = period(v)
+        elif k == "링크":
+            t["link"] = v
+        elif k in STACK_LABELS:
+            t["stack"], t["stack_label"] = v, k
+        elif k in CONTENT_LABELS:
+            t["blocks"].append((k, v, [c.text for c in child.children]))
+        elif t["blocks"]:
+            t["blocks"][-1][2].append(child.text)   # 라벨 없는 줄은 직전 블록에 붙인다
+        else:
+            t["blocks"].append(("", child.text, []))
+    return t
+
+
+def task_body(t: dict) -> str:
+    """문제 · 방법 · 결과 전문. 펼침 영역에 들어간다."""
+    out = ""
+    if t["link"]:
+        label = re.sub(r"^https?://", "", t["link"].strip())
+        out += (f'<p class="task-link"><a href="{html.escape(t["link"].strip())}"'
+                f' target="_blank" rel="noopener">{html.escape(label)}</a></p>')
+    for label, text, subs in t["blocks"]:
+        if label:
+            out += f'<h4 class="label">{html.escape(label)}</h4>'
+        if text:
+            out += f"<p>{inline(text)}</p>"
+        if subs:
+            out += "<ul>" + "".join(f"<li>{inline(s)}</li>" for s in subs) + "</ul>"
+    return out
+
+
+def task_summary(t: dict) -> str:
+    """카드에 보일 한 줄: 결과 본문, 없으면 결과 첫 항목."""
+    for label, text, subs in t["blocks"]:
+        if label in RESULT_LABELS:
+            return inline(text or (subs[0] if subs else ""))
+    return ""
+
+
+def render_hero(profile, total_months, n_works):
+    name = profile.get("성명", "김태종")
+    photo = build_photo()
+    photo_html = (
+        f'<img class="hero-photo" src="assets/{photo}" alt="{html.escape(name)}"'
+        f' width="{PHOTO_BOX[0] // 2}" height="{PHOTO_BOX[1] // 2}">' if photo else "")
+    stats = [(fmt_months(total_months), "총 경력")] if total_months else []
+    stats += [(f"{n_works}건", "주요 프로젝트")] + HERO_STATS
+    stats_html = "".join(
+        f'<li><span class="stat-num">{html.escape(n)}</span>'
+        f'<span class="stat-label">{html.escape(l)}</span></li>' for n, l in stats)
+    return f"""
+<section class="hero" id="top">
+  <div class="hero-text">
+    <p class="eyebrow">{html.escape(GREETING)}</p>
+    <h1>{HERO_TITLE}</h1>
+    <p class="hero-lead">{html.escape(HERO_LEAD)}</p>
+    <p class="hero-cta"><a class="btn btn-primary" href="#works">지난 작업 보기</a>
+      <a class="btn" href="#contact">연락하기</a></p>
+  </div>
+  {photo_html}
+</section>
+<ul class="stats">{stats_html}</ul>
+"""
+
+
+def render_about(paras):
+    statement, prose, principles = "", [], []
+    for p in paras:
+        lone = re.fullmatch(r"\*\*(.+)\*\*", p)
+        lead = re.match(r"^\*\*(.+?[.。])\*\*\s*(.*)$", p)
+        if lone and not statement:
+            statement = lone.group(1)
+        elif lead:
+            principles.append((lead.group(1), lead.group(2)))
+        else:
+            prose.append(p)
+    cards = "".join(
+        f'<li class="card"><h3>{inline(h)}</h3><p>{inline(b)}</p></li>' for h, b in principles)
+    return (f'<section class="sec" aria-labelledby="about">'
+            + section_head("01", "about", "About", "어떤 사람인가")
+            + (f'<p class="statement">{inline(statement)}</p>' if statement else "")
+            + '<div class="prose">' + "".join(f"<p>{inline(p)}</p>" for p in prose) + "</div>"
+            + (f'<h3 class="sub">일하는 방식</h3><ul class="cards cards-3">{cards}</ul>' if cards else "")
+            + "</section>")
+
+
+def render_history(sections, companies, rows, total):
+    info = {c["company"]: c for c in companies}
+    seen, items = set(), ""
+    for span, dur, org, excluded in rows:
+        parts = [p.strip() for p in org.split("/")]
+        comp = parts[0]
+        c = info.get(comp)
+        desc = ""
+        if c and comp not in seen:
+            seen.add(comp)
+            facts = c["facts"]
+            if facts.get("사업소개"):
+                desc += f'<p class="tl-desc">{inline(facts["사업소개"])}</p>'
+            if facts.get("담당업무"):
+                desc += f'<p class="tl-role">{inline(facts["담당업무"])}</p>'
+        tag = '<span class="tag">합산 제외</span>' if excluded else ""
+        items += (f'<li class="tl-item{" excluded" if excluded else ""}">'
+                  f'<p class="tl-when">{html.escape(span)}'
+                  f'{" · " + html.escape(dur) if dur else ""}</p>'
+                  f'<h3>{inline(comp)} {tag}</h3>'
+                  f'<p class="tl-org">{html.escape(" · ".join(parts[1:]))}</p>{desc}</li>')
+
+    extra = ""
+    for title in ("학력 사항", "교육이수 사항", "과외 활동", "병역 사항"):
+        sec = find(sections, title)
+        if sec:
+            lis = "".join(f"<li>{inline(b.text)}</li>" for b in parse_bullets(sec["lines"]))
+            extra += f'<div class="bg-group"><h4>{html.escape(title)}</h4><ul>{lis}</ul></div>'
+
+    total_html = (f'<p class="sec-note">총 경력 <strong>{html.escape(fmt_months(total))}</strong>'
+                  f' (인턴·프리랜서 제외)</p>' if total else "")
+    return (f'<section class="sec" aria-labelledby="history">'
+            + section_head("02", "history", "History", "연혁") + total_html
+            + f'<ol class="timeline">{items}</ol>'
+            + f'<h3 class="sub">학력 · 교육 · 활동</h3><div class="bg-grid">{extra}</div>'
+            + "</section>")
+
+
+def render_capabilities(sections):
     sec = find(sections, "핵심 기술 요약")
-    groups, current = [], None
+    out = ""
+    group, cards, tools = None, [], []
+
+    def flush():
+        nonlocal out
+        if group is None:
+            return
+        out += f'<div class="cap-group"><h3 class="sub">{html.escape(group)}</h3>'
+        if cards:
+            out += f'<ul class="cards cards-2">{"".join(cards)}</ul>'
+        if tools:
+            out += '<dl class="tools">' + "".join(
+                f"<div><dt>{html.escape(k)}</dt><dd class=\"stack\">{chips(v)}</dd></div>"
+                for k, v in tools) + "</dl>"
+        out += "</div>"
+
     for line in sec["lines"]:
         s = line.strip()
         cat = re.match(r"^\*\*\[(.+)\]\*\*$", s)
         if cat:
-            current = {"name": cat.group(1), "items": []}
-            groups.append(current)
-        elif s.startswith("- ") and current is not None:
-            current["items"].append(split_kv(s[2:]))
-
-    out = heading(2, "핵심 기술")
-    for g in groups:
-        items = "".join(
-            f"<li>{'<strong>' + html.escape(k) + '</strong> · ' if k else ''}"
-            f"{inline(v)}</li>" for k, v in g["items"])
-        out += (f'<div class="skill-group">'
-                + heading(4, html.escape(g["name"]))
-                + f'<ul>{items}</ul></div>')
-    return out
-
-
-# 프로젝트 본문에 소제목으로 렌더링되는 라벨. resume.md 에 적힌 순서·표기 그대로 나간다.
-# '문제 / 방법 / 결과' 가 현재 표준. 나머지는 구 문서 호환용이다.
-CONTENT_LABELS = ("문제", "방법", "결과", "해결", "성과", "역할",
-                  "Problem", "Methods", "Result")
-
-# 기술 스택 라벨. resume.md 는 '사용 기술' 을 쓰고, 구 표기도 받는다.
-STACK_LABELS = ("사용 기술", "기술", "Skills")
+            flush()
+            group, cards, tools = cat.group(1), [], []
+        elif s.startswith("- ") and group is not None:
+            bold = re.match(r"^\*\*(.+?)\*\*:\s*(.*)$", s[2:])   # split_kv 는 12자 제한이라 따로 본다
+            k, v = (bold.group(1), bold.group(2)) if bold else split_kv(s[2:])
+            if k and not bold:
+                tools.append((k, v))            # 'Frameworks: A, B' 같은 도구 나열
+            else:
+                title = f"<h4>{html.escape(k)}</h4>" if k else ""
+                cards.append(f'<li class="card">{title}<p>{inline(v)}</p></li>')
+    flush()
+    return (f'<section class="sec" aria-labelledby="capabilities">'
+            + section_head("03", "capabilities", "Capabilities", "역량") + out + "</section>")
 
 
-def render_task(task: Bullet, level: int = 5) -> str:
-    """수행업무 / 사이드 프로젝트 1건. 레퍼런스의 라벨 소제목 구조를 따른다."""
-    when = link = stack = ""
-    stack_label = "사용 기술"
-    blocks: list[tuple[str, str, list[str]]] = []   # (라벨, 본문, 하위 항목)
+def render_works(companies, side):
+    def card(task, org):
+        t = parse_task(task)
+        title_txt = re.sub(r"<[^>]+>", "", inline(task.text))
+        sid = slug(title_txt)
+        detail = DETAIL_PAGES.get(title_txt)
+        summary = task_summary(t)
+        actions = ""
+        if detail:
+            actions += (f'<a class="btn btn-primary btn-sm" href="{DETAIL_DIR}/{detail}.html">'
+                        f'상세 페이지 →</a>')
+        return (f'<li class="work" id="{sid}">'
+                f'<p class="work-meta">{html.escape(org)}'
+                f'{" · " + html.escape(t["when"]) if t["when"] else ""}</p>'
+                f'<h3>{inline(task.text)}</h3>'
+                + (f'<p class="work-summary">{summary}</p>' if summary else "")
+                + (f'<p class="stack">{chips(t["stack"])}</p>' if t["stack"] else "")
+                + f'<details><summary>문제 · 방법 · 결과 펼치기</summary>'
+                  f'<div class="work-body">{task_body(t)}</div></details>'
+                + (f'<p class="work-actions">{actions}</p>' if actions else "")
+                + "</li>")
 
-    for child in task.children:
-        k, v = split_kv(child.text)
-        if k == "기간":
-            when = period(v)
-        elif k == "링크":
-            link = v
-        elif k in STACK_LABELS:
-            stack, stack_label = v, k
-        elif k in CONTENT_LABELS:
-            blocks.append((k, v, [c.text for c in child.children]))
-        elif blocks:
-            # 라벨 없는 줄은 직전 블록에 붙인다.
-            blocks[-1][2].append(child.text)
-        else:
-            blocks.append(("", child.text, []))
-
-    title_txt = re.sub(r"<[^>]+>", "", inline(task.text))
-    aside = heading(level, inline(task.text), anchor=title_txt).replace(
-        f'<h{level} id=', f'<h{level} class="task-title" id=')
-    if when:
-        aside += f'<p class="task-period">{html.escape(when)}</p>'
-    detail = DETAIL_PAGES.get(title_txt)
-    if detail:
-        aside += (f'<p class="task-more"><a href="{DETAIL_DIR}/{detail}.html">'
-                  f'상세 보기 →</a></p>')
-
-    main = ""
-    if link:
-        label = re.sub(r"^https?://", "", link.strip())
-        main += (f'<p class="task-link"><a href="{html.escape(link.strip())}"'
-                 f' target="_blank" rel="noopener">{html.escape(label)}</a></p>')
-    for label, text, subs in blocks:
-        if label:
-            main += f'<h6 class="label">{html.escape(label)}</h6>'
-        if text:
-            main += f"<p>{inline(text)}</p>"
-        if subs:
-            main += "<ul>" + "".join(f"<li>{inline(s)}</li>" for s in subs) + "</ul>"
-    if stack:
-        main += (f'<h6 class="label">{html.escape(stack_label)}</h6>'
-                 f'<p class="stack">{chips(stack)}</p>')
-
-    return (f'<div class="task"><div class="task-aside">{aside}</div>'
-            f'<div class="task-main">{main}</div></div>')
+    items = "".join(card(t, c["company"]) for c in companies for t in c["tasks"])
+    items += "".join(card(t, "사이드 프로젝트") for t in side)
+    return (f'<section class="sec" aria-labelledby="works">'
+            + section_head("04", "works", "Works", "지난 작업")
+            + f'<ol class="works">{items}</ol></section>')
 
 
-def render_experience(sections):
-    start = next(i for i, s in enumerate(sections) if s["title"] == "경력기술서")
-    entries, side = [], None
-    for sec in sections[start + 1:]:
-        if sec["level"] != 3:
-            continue
-        if sec["title"] == "사이드 프로젝트":
-            side = sec
-        else:
-            entries.append(sec)
-
-    out = heading(2, "업무 경력")
-    for sec in entries:
-        head, when, dur = split_period(sec["title"])
-        parts = [p.strip() for p in head.split(",")]
-        company, team = parts[0], " / ".join(parts[1:])
-
-        facts, tasks = [], []
-        for b in parse_bullets(sec["lines"]):
-            k, v = split_kv(b.text)
-            if k and k in REDACT_FIELDS:
-                continue
-            if b.children:
-                tasks.append(b)
-            elif k:
-                facts.append((k, v))
-
-        dur_txt = f" · {dur}" if dur else ""
-        out += heading(3, f'{html.escape(company)} '
-                          f'<span class="period">{html.escape(when)}{html.escape(dur_txt)}</span>',
-                       anchor=company)
-        if team:
-            out += f"<h4>{html.escape(team)}</h4>"
-        if facts:
-            out += '<ul class="facts">' + "".join(
-                f"<li><strong>{html.escape(k)}</strong> · {inline(v)}</li>"
-                for k, v in facts) + "</ul>"
-        out += "".join(render_task(t) for t in tasks)
-
-    if side:
-        out += heading(2, "그 외 경력")
-        out += "".join(render_task(p) for p in parse_bullets(side["lines"]))
-    return out
+def render_contact(profile):
+    rows = []
+    if profile.get("이메일"):
+        rows.append(("이메일", f'<a href="mailto:{html.escape(profile["이메일"])}">'
+                             f'{html.escape(profile["이메일"])}</a>'))
+    if profile.get("전화번호"):
+        rows.append(("연락처", f'<a href="tel:{profile["전화번호"].replace("-", "")}">'
+                             f'{html.escape(profile["전화번호"])}</a>'))
+    if profile.get("Github"):
+        gh = profile["Github"]
+        rows.append(("GitHub", f'<a href="{html.escape(gh)}" target="_blank" rel="noopener">'
+                             f'{html.escape(gh.replace("https://", ""))}</a>'))
+    if profile.get("생년월일"):
+        rows.append(("생년월일", html.escape(profile["생년월일"])))
+    if profile.get("주소"):
+        rows.append(("주소", html.escape(trim_address(profile["주소"]))))
+    lis = "".join(f'<li><span class="k">{k}</span><span class="v">{v}</span></li>' for k, v in rows)
+    return (f'<section class="sec contact" aria-labelledby="contact">'
+            + section_head("05", "contact", "Contact", "함께 일하고 싶다면")
+            + f'<ul class="contact-list">{lis}</ul></section>')
 
 
-def render_background(sections):
-    out = heading(2, "학력 및 기타")
-    for title in ("학력 사항", "교육이수 사항", "과외 활동", "병역 사항"):
-        sec = find(sections, title)
-        if not sec:
-            continue
-        items = "".join(f"<li>{inline(b.text)}</li>" for b in parse_bullets(sec["lines"]))
-        out += (f'<div class="bg-group">'
-                + heading(4, html.escape(title))
-                + f'<ul>{items}</ul></div>')
-    return out
+def count_works(companies, side):
+    return sum(len(c["tasks"]) for c in companies) + len(side)
 
 
 def build_toc(content):
@@ -515,21 +577,33 @@ PAGE = """<!DOCTYPE html>
 <meta property="og:title" content="김태종 | AI Engineer">
 <meta property="og:description" content="에이전트의 기억·검색 계층을 설계하고 평가로 증명하는 AI 엔지니어. 장기기억, 검색 랭킹, 에이전트 아키텍처.">
 <meta property="og:type" content="profile">
-<meta name="color-scheme" content="light">
-<meta name="theme-color" content="#bbe2fb">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect x='12' y='12' width='76' height='76' rx='16' fill='%23bbe2fb'/><text x='50' y='50' font-size='52' font-family='sans-serif' font-weight='700' fill='%231b6fa8' text-anchor='middle' dominant-baseline='central'>TJ</text></svg>">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#0b0b0c">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect x='12' y='12' width='76' height='76' rx='16' fill='%230b0b0c'/><text x='50' y='50' font-size='52' font-family='sans-serif' font-weight='700' fill='%23ff4f9a' text-anchor='middle' dominant-baseline='central'>TJ</text></svg>">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <link rel="stylesheet" href="assets/style.css">
+<script src="assets/site.js" defer></script>
 </head>
 <body>
+<nav class="navbar">
+  <div class="navbar-inner">
+    <a class="navbar-brand" href="#top">@taejongK</a>
+    <ul class="navbar-links">
+      <li><a href="#about">About</a></li>
+      <li><a href="#history">History</a></li>
+      <li><a href="#capabilities">Capabilities</a></li>
+      <li><a href="#works">Works</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+  </div>
+</nav>
+<main class="site">
 __CONTENT__
   <footer class="doc-footer">
     <p>최종 수정 __UPDATED__</p>
   </footer>
-</article>
-__TOC__
-</div>
+</main>
 <script>
 /* 로드 시점의 #앵커 이동 보정.
    웹폰트와 사진이 늦게 들어오면서 문서 높이가 바뀌면 브라우저가 처음 시도한
@@ -565,15 +639,18 @@ def main():
         sys.exit(f"중단: 공개 원본 resume.md 에 민감 항목이 있습니다 → {leaked}")
 
     sections = load_document()
+    profile, paras = load_profile(sections)
+    companies, side = load_experience(sections)
+    rows, total = tenure_rows(sections)
     content = (
-        render_header(sections)
-        + render_tenure(sections)
-        + render_skills(sections)
-        + render_experience(sections)
-        + render_background(sections)
+        render_hero(profile, total, count_works(companies, side))
+        + render_about(paras)
+        + render_history(sections, companies, rows, total)
+        + render_capabilities(sections)
+        + render_works(companies, side)
+        + render_contact(profile)
     )
     page = (PAGE.replace("__CONTENT__", content)
-                .replace("__TOC__", build_toc(content))
                 .replace("__UPDATED__", date.today().strftime("%Y.%m.%d")))
     # 검사를 먼저 한다. 쓰고 나서 검사하면 차단에 실패해도 민감 정보가 디스크에 남는다.
     leaked = [w for w in BANNED_WORDS if w in page]
