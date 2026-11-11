@@ -178,15 +178,6 @@ def resolve_duration(when: str, dur: str) -> str:
     return fmt_months(months)
 
 
-def trim_address(addr: str) -> str:
-    """공개판 주소는 동/읍/면 까지만. 그 뒤 상세주소는 버린다."""
-    tokens = addr.split()
-    for i, tok in enumerate(tokens):
-        if re.search(r"[동읍면리가]\d*$", tok):
-            return " ".join(tokens[:i + 1])
-    return addr
-
-
 # ── 파싱 ──────────────────────────────────────────────────────────────
 class Bullet:
     __slots__ = ("level", "text", "children")
@@ -541,8 +532,6 @@ def render_contact(profile):
                              f'{html.escape(gh.replace("https://", ""))}</a>'))
     if profile.get("생년월일"):
         rows.append(("생년월일", html.escape(profile["생년월일"])))
-    if profile.get("주소"):
-        rows.append(("주소", html.escape(trim_address(profile["주소"]))))
     lis = "".join(f'<li><span class="k">{k}</span><span class="v">{v}</span></li>' for k, v in rows)
     return (f'<section class="sec contact" aria-labelledby="contact">'
             + section_head("05", "contact", "Contact", "함께 일하고 싶다면")
