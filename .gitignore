@@ -63,3 +63,6 @@ _frame.html
 
 # 인쇄용 사진 원본 (웹용 파생본 assets/profile.jpg 만 공개)
 imgs/
+
+# 채용공고 수집·판정 스크립트와 결과 (비공개, 저장소 루트째 배포되므로 통째로 제외)
+job_watch/
