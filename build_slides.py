@@ -47,7 +47,7 @@ except ImportError:
     PRIVATE_GUARD = False
 
 # 덱에 반드시 있어야 하는 것. 실수로 통째로 날아가면 잡는다
-REQUIRED = ("김태종", "AI Agent / LLM Engineer")
+REQUIRED = ("김태종", "AI Engineer")
 
 
 def read_source() -> str:

@@ -40,8 +40,17 @@ except ImportError:
 GREETING = "AI Engineer 김태종"
 HERO_TITLE = "에이전트가 <em>무엇을 기억할지</em><br>설계하고, 평가로 증명합니다."   # HTML 허용
 HERO_LEAD = "장기기억 · 검색 랭킹 · 에이전트 아키텍처 · LLM 평가"
-# 히어로 숫자 카드. 총 경력·프로젝트 수는 자동 계산, 아래는 resume.md 버블탭 '서비스 규모' 값.
-HERO_STATS = [("일 30만 챗", "운영 중인 챗봇 규모")]
+# 히어로 아래 성과 요약. (회사, 문장) 최근순, HTML 허용.
+# 내용·수치는 resume.md 자기소개의 경력 요약 문단에서 옮긴 것이다. 그 문단을 고치면 여기도 고친다.
+HERO_RESULTS = [
+    ("버블탭", "캐릭터 챗봇(DAU 3,000, 일 30만 챗)의 LLM 레이어 담당. 장기기억 커스텀 검색 "
+               "<strong>Precision@3 48%</strong>(장기 대화 <strong>68%</strong>), 유해 콘텐츠 차단 "
+               "<strong>F1 18% → 87%</strong>, 월 15만 질의 검색 랭킹 개선안 설계·검증"),
+    ("브릭", "<strong>사내 첫 LLM 적용 사례</strong>를 만들어 사업화 검토의 근거 제공"),
+    ("알고리고", "압력 센서 졸음 탐지 모델로 <strong>현장 관리 인력을 절반</strong>으로 절감"),
+]
+# 위 요약으로 옮겨 간 문단의 첫머리. About 에서는 중복이라 뺀다.
+ABOUT_MOVED = "알고리고에서는"
 
 # ── 프로젝트 상세 페이지 ──────────────────────────────────────────────
 # {resume.md 의 수행업무 제목: 슬러그}
@@ -367,17 +376,15 @@ def task_summary(t: dict) -> str:
     return ""
 
 
-def render_hero(profile, total_months, n_works):
+def render_hero(profile):
     name = profile.get("성명", "김태종")
     photo = build_photo()
     photo_html = (
         f'<img class="hero-photo" src="assets/{photo}" alt="{html.escape(name)}"'
         f' width="{PHOTO_BOX[0] // 2}" height="{PHOTO_BOX[1] // 2}">' if photo else "")
-    stats = [(fmt_months(total_months), "총 경력")] if total_months else []
-    stats += [(f"{n_works}건", "주요 프로젝트")] + HERO_STATS
-    stats_html = "".join(
-        f'<li><span class="stat-num">{html.escape(n)}</span>'
-        f'<span class="stat-label">{html.escape(l)}</span></li>' for n, l in stats)
+    results_html = "".join(
+        f'<li><span class="k">{html.escape(k)}</span><span class="v">{v}</span></li>'
+        for k, v in HERO_RESULTS)
     return f"""
 <section class="hero" id="top">
   <div class="hero-text">
@@ -389,7 +396,7 @@ def render_hero(profile, total_months, n_works):
   </div>
   {photo_html}
 </section>
-<ul class="stats">{stats_html}</ul>
+<ul class="results" aria-label="주요 성과">{results_html}</ul>
 """
 
 
@@ -404,6 +411,10 @@ def render_about(paras):
             principles.append((lead.group(1), lead.group(2)))
         else:
             prose.append(p)
+    # 문단 첫머리가 바뀌면 조용히 중복 노출되므로 빌드를 멈춘다
+    if not any(p.startswith(ABOUT_MOVED) for p in prose):
+        sys.exit(f"중단: '{ABOUT_MOVED}' 로 시작하는 문단이 없습니다. ABOUT_MOVED 와 HERO_RESULTS 를 확인하세요.")
+    prose = [p for p in prose if not p.startswith(ABOUT_MOVED)]
     cards = "".join(
         f'<li class="card"><h3>{inline(h)}</h3><p>{inline(b)}</p></li>' for h, b in principles)
     return (f'<section class="sec" aria-labelledby="about">'
@@ -538,10 +549,6 @@ def render_contact(profile):
             + f'<ul class="contact-list">{lis}</ul></section>')
 
 
-def count_works(companies, side):
-    return sum(len(c["tasks"]) for c in companies) + len(side)
-
-
 def build_toc(content):
     """본문의 h2/h3 를 훑어 우측 목차를 만든다. 레퍼런스와 동일한 2단 위계."""
     items = []
@@ -550,7 +557,7 @@ def build_toc(content):
         text = re.sub(r'<span class="period">.*?</span>', "", inner, flags=re.S)
         text = re.sub(r"<[^>]+>", "", text).strip()
         if text:
-            items.append(f'<li class="lv{lv}"><a href="#{sid}">{html.escape(text)}</a></li>')
+            items.append(f'<li class="lv{lv}"><a href="#{sid}">{html.escape(html.unescape(text))}</a></li>')  # 본문은 이미 이스케이프돼 있어 한 번 풀고 다시 건다
     if not items:
         return ""
     return f'<nav class="toc" aria-label="\ubaa9\ucc28"><ul>{"".join(items)}</ul></nav>'
@@ -632,7 +639,7 @@ def main():
     companies, side = load_experience(sections)
     rows, total = tenure_rows(sections)
     content = (
-        render_hero(profile, total, count_works(companies, side))
+        render_hero(profile)
         + render_about(paras)
         + render_history(sections, companies, rows, total)
         + render_capabilities(sections)
