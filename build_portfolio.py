@@ -305,9 +305,9 @@ PAGE = """<!DOCTYPE html>
 <meta property="og:title" content="__TITLE__ | 김태종">
 <meta property="og:description" content="__LEAD__">
 <meta property="og:type" content="article">
-<meta name="color-scheme" content="dark">
-<meta name="theme-color" content="#0b0b0c">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect x='12' y='12' width='76' height='76' rx='16' fill='%230b0b0c'/><text x='50' y='50' font-size='52' font-family='sans-serif' font-weight='700' fill='%23ff4f9a' text-anchor='middle' dominant-baseline='central'>TJ</text></svg>">
+<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#ffffff">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect x='12' y='12' width='76' height='76' rx='16' fill='%230077c8'/><text x='50' y='50' font-size='52' font-family='sans-serif' font-weight='700' fill='%23ffffff' text-anchor='middle' dominant-baseline='central'>TJ</text></svg>">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <link rel="stylesheet" href="../assets/style.css">

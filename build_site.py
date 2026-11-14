@@ -573,9 +573,9 @@ PAGE = """<!DOCTYPE html>
 <meta property="og:title" content="김태종 | AI Engineer">
 <meta property="og:description" content="에이전트의 기억·검색 계층을 설계하고 평가로 증명하는 AI 엔지니어. 장기기억, 검색 랭킹, 에이전트 아키텍처.">
 <meta property="og:type" content="profile">
-<meta name="color-scheme" content="dark">
-<meta name="theme-color" content="#0b0b0c">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect x='12' y='12' width='76' height='76' rx='16' fill='%230b0b0c'/><text x='50' y='50' font-size='52' font-family='sans-serif' font-weight='700' fill='%23ff4f9a' text-anchor='middle' dominant-baseline='central'>TJ</text></svg>">
+<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#ffffff">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect x='12' y='12' width='76' height='76' rx='16' fill='%230077c8'/><text x='50' y='50' font-size='52' font-family='sans-serif' font-weight='700' fill='%23ffffff' text-anchor='middle' dominant-baseline='central'>TJ</text></svg>">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <link rel="stylesheet" href="assets/style.css">
