@@ -474,7 +474,8 @@ def render_capabilities(sections):
             return
         out += f'<div class="cap-group"><h3 class="sub">{html.escape(group)}</h3>'
         if cards:
-            out += f'<ul class="cards cards-2">{"".join(cards)}</ul>'
+            cols = 3 if len(cards) == 3 else 2   # 핵심 역량 3개는 한 줄에
+            out += f'<ul class="cards cards-{cols}">{"".join(cards)}</ul>'
         if tools:
             out += '<dl class="tools">' + "".join(
                 f"<div><dt>{html.escape(k)}</dt><dd class=\"stack\">{chips(v)}</dd></div>"
