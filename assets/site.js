@@ -22,6 +22,36 @@
     document.querySelectorAll("details").forEach(function (d) { d.open = true; });
   });
 
+  // 프로젝트 본문 펼치기·접기: 높이를 부드럽게 늘이고 줄인다 (모션 축소 설정이면 기본 동작 그대로)
+  if (!reduce && Element.prototype.animate) {
+    document.querySelectorAll("details").forEach(function (d) {
+      var body = d.querySelector(".work-body"), anim = null;
+      if (!body) return;
+      d.querySelector("summary").addEventListener("click", function (e) {
+        e.preventDefault();
+        var from = anim ? body.getBoundingClientRect().height : null;   // 도중에 다시 누르면 지금 높이에서 이어간다
+        if (anim) anim.cancel();
+        var opening = !d.open || d.classList.contains("closing");
+        d.classList.toggle("closing", !opening);
+        d.open = true;
+        var full = body.scrollHeight;
+        if (from === null) from = opening ? 0 : full;
+        var to = opening ? full : 0;
+        body.style.overflow = "hidden";
+        anim = body.animate(
+          [{ height: from + "px", opacity: opening ? Math.min(from / full, 1) : 1 },
+           { height: to + "px", opacity: opening ? 1 : 0 }],
+          { duration: (600 + Math.min(full, 1500) * 0.3) * (opening ? 1 : 0.7),   // 길수록 조금 더 천천히, 접기는 더 빨리
+            easing: "cubic-bezier(.65, 0, .35, 1)" });
+        anim.onfinish = function () {
+          anim = null;
+          body.style.overflow = "";
+          if (!opening) { d.open = false; d.classList.remove("closing"); }
+        };
+      });
+    });
+  }
+
   if (!("IntersectionObserver" in window)) return;
 
   // 2) 스크롤 등장: 블록 단위로 한 번만
