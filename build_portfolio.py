@@ -24,7 +24,7 @@ from datetime import date
 from pathlib import Path
 
 from build_site import (
-    DETAIL_PAGES, build_toc, chips, heading, inline, period, slug, split_kv,
+    DETAIL_PAGES, breaks, build_toc, chips, heading, inline, period, slug, split_kv,
 )
 
 ROOT = Path(__file__).parent
@@ -200,7 +200,7 @@ def render_list(items):
     def render(nodes):
         out = "<ul>"
         for n in nodes:
-            out += f"<li>{inline(n['text'])}"
+            out += f"<li>{breaks(inline(n['text']))}"
             if n["children"]:
                 out += render(n["children"])
             out += "</li>"
@@ -271,7 +271,7 @@ def render_body(blocks, name: str, pending: list):
         elif kind == "img":
             out += render_figure(value[0], value[1], name, pending)
         else:
-            out += f"<p>{inline(value)}</p>"
+            out += f"<p>{breaks(inline(value))}</p>"
     return out
 
 
@@ -355,7 +355,7 @@ def build_page(src: Path, back_anchor: str, name: str, pending: list) -> str:
     return (PAGE
             .replace("__CONTENT__", content)
             .replace("__TOC__", build_toc(content))
-            .replace("__LEAD_HTML__", f'<p class="lead">{inline(lead)}</p>' if lead else "")
+            .replace("__LEAD_HTML__", f'<p class="lead">{breaks(inline(lead))}</p>' if lead else "")
             .replace("__META__", render_meta(meta))
             .replace("__STACK__", stack_html)
             .replace("__BACK_ANCHOR__", back_anchor)

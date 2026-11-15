@@ -43,12 +43,111 @@ HERO_LEAD = "장기기억 · 검색 랭킹 · 에이전트 아키텍처 · LLM �
 # 히어로 아래 성과 요약. (회사, 문장) 최근순, HTML 허용.
 # 내용·수치는 resume.md 자기소개의 경력 요약 문단에서 옮긴 것이다. 그 문단을 고치면 여기도 고친다.
 HERO_RESULTS = [
-    ("버블탭", "캐릭터 챗봇(DAU 3,000, 일 30만 챗)의 LLM 레이어 담당. 장기기억 커스텀 검색 "
-               "<strong>Precision@3 48%</strong>(장기 대화 <strong>68%</strong>), 유해 콘텐츠 차단 "
-               "<strong>F1 18% → 87%</strong>, 월 15만 질의 검색 랭킹 개선안 설계·검증"),
-    ("브릭", "<strong>사내 첫 LLM 적용 사례</strong>를 만들어 사업화 검토의 근거 제공"),
-    ("알고리고", "압력 센서 졸음 탐지 모델로 <strong>현장 관리 인력을 절반</strong>으로 절감"),
+    ("버블탭", "캐릭터 챗봇(DAU 3,000)의 LLM 레이어를 맡고 있습니다. 기억 검색 "
+               "<strong>Precision@3 48%</strong>, 유해 콘텐츠 차단 <strong>F1 18% → 87%</strong>"),
+    ("브릭", "<strong>사내 첫 LLM 적용 사례</strong>를 만들어 사업화 검토의 근거가 됐습니다"),
+    ("알고리고", "졸음 탐지 모델로 <strong>현장 관리 인력을 절반</strong>으로 줄였습니다"),
 ]
+# 첫 화면 Works 카드에 보일 세 줄 (Why · What · How). 전문은 resume.md 와 상세 페이지에 있다.
+# 수치는 resume.md 에 있는 것만 쓴다. resume.md 의 프로젝트 제목이 바뀌면 빌드가 멈춘다.
+WORK_CARDS = {
+    "이미지 검열 시스템 설계·구축 (판정 구조 설계 · clef-flash 직접 서빙 · 운영팀 검수 보조 도구)": (
+        "채팅 이미지를 업로드 직후 1초 안에 판정해야 했고, 운영팀은 어드민 밖 판정 결과를 다시 확인하는 이중 작업 중이었음",
+        "평가셋 <strong>탐지율 96% · 오탐률 0.7%</strong>, 이미지 1장 0.2초로 목표 충족. 운영팀 검수 도구로 사내 운영 중",
+        "규정을 질문으로 옮기고, 확률을 내는 결정 모델을 직접 서빙해 분류 → 사유 2단계로 판정함"),
+    "Chat Arena 개발 (사람 블라인드 투표 기반 모델·프롬프트 비교)": (
+        "모델·프롬프트를 사람이 같은 맥락에서 비교한 데이터가 없었음",
+        "기존 아레나와 점수 산식 일치 확인(무작위 50회 비교 차이 0), 공용 서버 반영 후 사내 6명 QA 진행",
+        "실제 서빙 경로로 응답을 만들고, 블라인드 쌍대 투표를 Bradley-Terry로 집계함"),
+    "검색 랭킹 개선안 설계 및 평가 체계 구축": (
+        "월 15만 건 검색 질의가 있었지만 품질을 측정한 적이 없었음",
+        "오프라인 <strong>Precision@10 +3.6 ~ +6.8p</strong>(6개 조합 중 5개 유의), 팀 적용안으로 확정",
+        "평가 체계(층화 추출 · LLM 판정 · 부트스트랩 신뢰구간)를 먼저 세우고, 검색 필드 확장과 인기도 결합식을 설계함"),
+    "프롬프트 해킹 시도 탐지 대시보드 개발 (룰 + LLM 2단계 판정)": (
+        "해킹 지표가 9.7%만 판정한 표본 수치였고, 원문이 남지 않아 수법을 볼 수 없었음",
+        "하루 <strong>29만 건 → 해킹 의심 10건</strong>, 하루 $3.83로 전수 판정",
+        "룰은 후보만 고르고 LLM이 4개 축으로 채점, 운영팀이 근거를 보고 검수함"),
+    "프롬프트 관리 툴 개발 (사내 LLMOps)": (
+        "지금 쓰는 프롬프트가 어떤 이력과 테스트를 거쳐 배포됐는지 알 수 없었음",
+        "팀 공용 단일 프롬프트 소스 확보, 수정·테스트 시간 <strong>1시간 → 30분</strong>",
+        "프롬프트를 DB로 옮겨 git처럼 버전·diff·cherry-pick을 붙이고, MCP 서버로 Claude Code에서 바로 수정하게 함"),
+    "자체 서빙 모델 콘텐츠 필터 개발 (CoT 기반)": (
+        "자체 서빙 모델에 콘텐츠 필터가 없었고, 단순 금지 지시로는 F1 18.1%에 그쳤음",
+        "미성년자 성적 콘텐츠 차단 <strong>F1 18.1% → 87.0%</strong>, 배포 후 관련 문의 0건",
+        "답변 전에 분류를 먼저 출력하게 하고, 나이 → 성적 요소 → 최종 판정 순서로 추론하게 함"),
+    "캐릭터 제작 에이전트 개발 (멀티 에이전트)": (
+        "에이전트 하나로는 캐릭터·세계관·관계를 동시에 깊이 있게 설계하기 어려웠음",
+        "프레임워크 없이 3단계 멀티 에이전트 PoC 완성(프로덕션 반영은 보류)",
+        "Router가 필요한 도구만 골라 병렬 실행하고, Idea Agent가 결과를 합쳐 스트리밍함"),
+    "LLM-as-judge 평가 체계 구축 (루브릭 프롬프트 설계 포함)": (
+        "프롬프트나 모델을 바꿔도 좋아졌는지 감으로만 판단했음",
+        "모델 채택·프롬프트 개선의 공통 측정 도구로 사용, 블라인드 QA로 자체 학습 모델 우위 확인(3.45 vs 3.02)",
+        "객관적 제약은 규칙으로, 주관적 품질은 LLM 심사자가 채점하고 사람 평가로 보정함"),
+    "프롬프트 탈취 대응 및 보안 프롬프트 재설계": (
+        "유저가 만든 캐릭터 설정을 통해 시스템 프롬프트를 빼내려는 시도를 확인함",
+        "탈취 시도 20종 재현 테스트 <strong>성공률 0%</strong>, 배포 후 재발 0건",
+        "요청을 거절하지 않고, 내부 설정이 없는 것처럼 캐릭터가 흘려보내도록 재설계함"),
+    "챗봇 장기기억 구조 설계 및 커스텀 기억 검색(RRF) 적용": (
+        "긴 대화에서 캐릭터 일관성이 무너졌고, 기존 벡터 검색은 Recall 약 10%였음",
+        "요약 품질 3.55 → 3.99, 기억 검색 <strong>Precision@3 48%</strong>(51~150턴 68%), 요약 API 비용 월 약 171만 원 제거",
+        "검색을 걷어내고 요약·재압축 구조로 바꾼 뒤, 사실·최근성·관련성을 RRF로 합친 기억 검색을 더함"),
+    "CS 챗봇 개발 (어드민 적용)": (
+        "반복 문의로 CS 비용이 늘었고, 모호한 질문에는 맞는 문서를 찾지 못했음",
+        "관련 문서 검색 성공률 <strong>20% → 80%</strong>, 어드민에 적용",
+        "모호한 질문을 검색하기 좋은 문장으로 다시 쓰고, MMR 검색과 연속 대화를 붙임"),
+    "RAG 기반 회사 솔루션 사용법 설명 챗봇 개발": (
+        "솔루션 사용법 문의를 매번 사람이 응대했고, 사내에 LLM 적용 사례가 없었음",
+        "내부 테스트 <strong>만족도 86%</strong>, 사내 첫 LLM 적용 사례로 사업화 검토의 근거가 됨",
+        "기획부터 API·화면까지 직접 만들고, 검색 품질을 항목별로 측정해 실사용 가능 여부를 판단함"),
+    "실시간 졸음 탐지 모델 개발 (이상탐지)": (
+        "졸고 있는 학생을 찾으려면 매니저가 시간당 2명씩 순찰해야 했음",
+        "Precision 0.92 모델로 알림 기반 순찰 전환, <strong>현장 인력 50% 절감</strong>",
+        "현장 관찰로 라벨 기준을 세우고, 무게중심 변화 feature와 AutoEncoder → DeepSAD 준지도 학습을 적용함"),
+    "자세분류 모델 성능 개선 (분류)": (
+        "자세분류 정확도가 82%에 머물렀고, 특정 체형에서 특히 낮았음",
+        "정확도 <strong>82% → 97%</strong>",
+        "클러스터링으로 잘못된 데이터를 걸러 재학습하고, 체형 차이는 앙상블로 보완함"),
+    "집중도 지표 개발 (통계)": (
+        "학생이 얼마나 집중했는지 보여줄 지표가 없었음",
+        "검증한 집중도 지표를 라이브러리로 배포, 월간 학습 보고서에 반영",
+        "현장 관찰로 가설을 고쳐 움직임의 변화량 기준으로 지표를 설계함"),
+    "카시트 호흡·심박 추정 연구 (신호 처리)": (
+        "카시트로 호흡·심박을 읽어 졸음운전을 탐지할 수 있는지 확인하는 선행 연구",
+        "실험실 오차 약 6%가 실제 주행에서 약 32%로 커져 실용화가 어렵다고 판단, 연구 단계에서 종료",
+        "압력 센서 32개 카시트로 데이터를 직접 수집하고, FFT와 LSTM으로 신호를 추정함"),
+    "데이터 바우처 사업 지원 및 데이터 분석·가공": (
+        "지원 기업 대부분이 자사 현안을 데이터 과제로 정의하지 못했음",
+        "컨설팅한 약 30개 업체 중 <strong>18곳 선정</strong>(선정률 60%)",
+        "업체 현안을 데이터로 검증할 수 있는 과제로 구체화하고, 선정 후 분석·가공까지 맡음"),
+    "연구 보고서 작성 에이전트 개발": (
+        "주제 하나를 조사하려면 논문을 일일이 찾아 읽어야 했음",
+        "10분 안에 1페이지 분량 연구 보고서를 자동 작성하는 에이전트 완성",
+        "후속 질문을 만들고 Arxiv를 재귀적으로 검색해 결과를 보고서로 묶음"),
+    "Semantic Segmentation 모델을 사용한 차량 파손 탐지 서비스 개발": (
+        "파손 3종을 한 모델로 학습하면 클래스끼리 간섭해 정확도가 낮았음",
+        "3종 파손 구분 서비스 완성(<strong>IoU 0.75</strong>)",
+        "클래스별로 모델을 나누고, 파손 부위 crop 증강과 출력 채널 분리를 적용함"),
+}
+
+# 첫 화면 역량 카드 문구. resume.md 의 긴 설명은 제출용 이력서에만 쓴다.
+CAP_SHORT = {   # (항목, 한 줄 설명)
+    "Memory & Retrieval": [
+        ("장기기억", "벡터 검색 한계 규명 → 요약 구조로 전환"),
+        ("기억 검색", "다중 신호 RRF · Precision@3 48%"),
+        ("검색 랭킹", "Precision@10 최대 +6.8p"),
+    ],
+    "Evaluation": [
+        ("Chat Arena", "블라인드 쌍대 비교 · Bradley-Terry"),
+        ("검색 평가", "LLM 판정 · 부트스트랩 신뢰구간"),
+        ("LLM-as-judge", "규칙 + LLM 채점, 사람 평가로 보정"),
+    ],
+    "Safety & Content Moderation": [
+        ("콘텐츠 필터", "F1 18% → 87%"),
+        ("이미지 검열", "탐지율 96% · 오탐률 0.7%"),
+        ("해킹 탐지", "하루 29만 건 → 의심 10건"),
+    ],
+}
+
 # 위 요약으로 옮겨 간 문단의 첫머리. About 에서는 중복이라 뺀다.
 ABOUT_MOVED = "알고리고에서는"
 
@@ -61,6 +160,7 @@ ABOUT_MOVED = "알고리고에서는"
 # 산출물이 works/ 인 이유: projects/ 는 .gitignore 전체 차단 대상이라
 # 그 아래 HTML 을 두면 GitHub Pages 에 배포되지 않는다.
 DETAIL_PAGES = {
+    "이미지 검열 시스템 설계·구축 (판정 구조 설계 · clef-flash 직접 서빙 · 운영팀 검수 보조 도구)": "image-moderation",
     "Chat Arena 개발 (사람 블라인드 투표 기반 모델·프롬프트 비교)": "chat-arena",
     "검색 랭킹 개선안 설계 및 평가 체계 구축": "search-ranking",
     "챗봇 장기기억 구조 설계 및 커스텀 기억 검색(RRF) 적용": "long-term-memory",
@@ -114,6 +214,11 @@ def build_photo():
 
 
 # ── 인라인 마크다운 ───────────────────────────────────────────────────
+def breaks(html_text: str) -> str:
+    """합니다체 문장이 끝나는 곳에서 줄을 바꾼다. 여러 문장이 한 줄로 이어 붙으면 읽기 어렵다."""
+    return re.sub(r"(니다\.(?:</strong>)?)\s+(?=\S)", r"\1<br>", html_text)
+
+
 def inline(text: str) -> str:
     """**굵게**, `코드`, [링크](url), 맨 URL 을 HTML 로."""
     out = html.escape(text)
@@ -383,7 +488,7 @@ def render_hero(profile):
         f'<img class="hero-photo" src="assets/{photo}" alt="{html.escape(name)}"'
         f' width="{PHOTO_BOX[0] // 2}" height="{PHOTO_BOX[1] // 2}">' if photo else "")
     results_html = "".join(
-        f'<li><span class="k">{html.escape(k)}</span><span class="v">{v}</span></li>'
+        f'<li><span class="k">{html.escape(k)}</span><span class="v">{breaks(v)}</span></li>'
         for k, v in HERO_RESULTS)
     return f"""
 <section class="hero" id="top">
@@ -415,11 +520,12 @@ def render_about(paras):
     if not any(p.startswith(ABOUT_MOVED) for p in prose):
         sys.exit(f"중단: '{ABOUT_MOVED}' 로 시작하는 문단이 없습니다. ABOUT_MOVED 와 HERO_RESULTS 를 확인하세요.")
     prose = [p for p in prose if not p.startswith(ABOUT_MOVED)]
+    stmt = re.sub(r"([,?]) ", r"\1<br>", inline(statement))   # 쉼표·물음표에서 줄을 나눈다
     cards = "".join(
         f'<li class="card"><h3>{inline(h)}</h3><p>{inline(b)}</p></li>' for h, b in principles)
     return (f'<section class="sec" aria-labelledby="about">'
             + section_head("01", "about", "About", "어떤 사람인가")
-            + (f'<p class="statement">{inline(statement)}</p>' if statement else "")
+            + (f'<p class="statement">{stmt}</p>' if statement else "")
             + '<div class="prose">' + "".join(f"<p>{inline(p)}</p>" for p in prose) + "</div>"
             + (f'<h3 class="sub">일하는 방식</h3><ul class="cards cards-3">{cards}</ul>' if cards else "")
             + "</section>")
@@ -495,7 +601,9 @@ def render_capabilities(sections):
                 tools.append((k, v))            # 'Frameworks: A, B' 같은 도구 나열
             else:
                 title = f"<h4>{html.escape(k)}</h4>" if k else ""
-                cards.append(f'<li class="card">{title}<p>{inline(v)}</p></li>')
+                body = (f'<ul>{"".join(f"<li><strong>{h}</strong><span>{d}</span></li>" for h, d in CAP_SHORT[k])}</ul>'
+                        if k in CAP_SHORT else f'<p>{inline(v)}</p>')
+                cards.append(f'<li class="card">{title}{body}</li>')
     flush()
     return (f'<section class="sec" aria-labelledby="capabilities">'
             + section_head("03", "capabilities", "Capabilities", "역량") + out + "</section>")
@@ -507,21 +615,25 @@ def render_works(companies, side):
         title_txt = re.sub(r"<[^>]+>", "", inline(task.text))
         sid = slug(title_txt)
         detail = DETAIL_PAGES.get(title_txt)
-        summary = task_summary(t)
-        actions = ""
+        if title_txt not in WORK_CARDS:
+            sys.exit(f"중단: WORK_CARDS 에 '{title_txt}' 가 없습니다. 첫 화면 세 줄 요약을 추가하세요.")
+        why, what, how = WORK_CARDS[title_txt]
+        short = re.sub(r"\s*\([^()]*\)$", "", title_txt)        # 제목 끝 괄호 설명은 첫 화면에서 뺀다
+        dates = re.findall(r"\d{4}\.\d{2}", t["when"])
+        when = (f"{dates[0]} ~ {dates[-1]}" if len(dates) > 1 and dates[0] != dates[-1]
+                else dates[0] if dates else t["when"])
+        rows = "".join(f"<div><dt>{k}</dt><dd>{breaks(v)}</dd></div>"
+                       for k, v in (("Why", why), ("What", what), ("How", how)))
         if detail:
-            actions += (f'<a class="btn btn-primary btn-sm" href="{DETAIL_DIR}/{detail}.html">'
-                        f'상세 페이지 →</a>')
+            more = (f'<p class="work-actions"><a class="btn btn-primary btn-sm" '
+                    f'href="{DETAIL_DIR}/{detail}.html">상세 페이지 →</a></p>')
+        else:   # 상세 페이지가 없는 작업만 이력서 전문을 접어서 둔다
+            more = (f'<details><summary>전체 내용 펼치기</summary>'
+                    f'<div class="work-body">{task_body(t)}</div></details>')
         return (f'<li class="work" id="{sid}">'
-                f'<p class="work-meta">{html.escape(org)}'
-                f'{" · " + html.escape(t["when"]) if t["when"] else ""}</p>'
-                f'<h3>{inline(task.text)}</h3>'
-                + (f'<p class="work-summary">{summary}</p>' if summary else "")
-                + (f'<p class="stack">{chips(t["stack"])}</p>' if t["stack"] else "")
-                + f'<details><summary>문제 · 방법 · 결과 펼치기</summary>'
-                  f'<div class="work-body">{task_body(t)}</div></details>'
-                + (f'<p class="work-actions">{actions}</p>' if actions else "")
-                + "</li>")
+                f'<p class="work-meta">{html.escape(org)}{" · " + html.escape(when) if when else ""}</p>'
+                f'<h3>{html.escape(short)}</h3>'
+                f'<dl class="wwh">{rows}</dl>{more}</li>')
 
     items = "".join(card(t, c["company"]) for c in companies for t in c["tasks"])
     items += "".join(card(t, "사이드 프로젝트") for t in side)
